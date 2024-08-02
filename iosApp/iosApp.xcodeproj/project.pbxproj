@@ -101,7 +101,7 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
+			repository = (
 			);
 			name = iosApp;
 			packageProductDependencies = (
