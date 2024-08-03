@@ -8,11 +8,11 @@ data class Jubilar(
     val firstName: String,
     val lastName: String,
     var gender: Gender,
-    val birthdate: LocalDate, // TODO: Use Date instead of String
+    val birthdate: LocalDate,
     val address: String,
     val optOut: Boolean,
     val comment: String,
-    val marriageAnniversary: MarriageAnniversary?
+    val marriageAnniversary: MarriageAnniversary
 )
 
 enum class Gender {
@@ -20,5 +20,5 @@ enum class Gender {
 }
 
 enum class MarriageAnniversary {
-    GOLDEN, DIAMOND, IRON, PLATINUM
+    NONE, GOLDEN, DIAMOND, IRON, PLATINUM
 }

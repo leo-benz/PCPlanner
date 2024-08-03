@@ -1,3 +1,5 @@
+package dev.leobenz.pcplanner
+
 import android.app.Application
 import di.initKoin
 
