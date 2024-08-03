@@ -51,4 +51,8 @@ class JubilareViewModel(
             marriageAnniversary = marriageAnniversary
         )
     }
+
+    fun deleteAllJubilare() {
+        repository.deletaAll()
+    }
 }

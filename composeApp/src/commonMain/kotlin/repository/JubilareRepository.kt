@@ -11,6 +11,7 @@ interface JubilareRepository {
     fun greet(): String
     fun insert(jubilar: Jubilar)
     fun getJubilare(): Flow<List<Jubilar>>
+    fun deletaAll()
 }
 
 class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
@@ -26,6 +27,12 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
 
     override fun getJubilare(): Flow<List<Jubilar>> {
         return database.jubilarDao().getAllAsFlow()
+    }
+
+    override fun deletaAll() {
+        coroutineScope.launch {
+            database.jubilarDao().deleteAll()
+        }
     }
 
     private val database: AppDatabase by inject()

@@ -1,9 +1,6 @@
 package database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import model.Jubilar
 
@@ -21,4 +18,10 @@ interface JubilarDao {
 
     @Query("SELECT COUNT(*) as count FROM Jubilar")
     suspend fun getCount(): Int
+
+    @Query("DELETE FROM Jubilar")
+    suspend fun deleteAll()
+
+    @Delete
+    suspend fun delete(jubilar: Jubilar)
 }
