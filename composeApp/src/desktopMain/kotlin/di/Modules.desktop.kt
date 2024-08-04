@@ -15,5 +15,6 @@ fun createRoomDatabase(): AppDatabase {
     val dbFile = File(System.getProperty("user.home"), dbFileName)
     return Room.databaseBuilder<AppDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
+        .fallbackToDestructiveMigration(true)
         .build()
 }

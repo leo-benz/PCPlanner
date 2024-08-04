@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinContext
 import ui.JubilareOverview
+import ui.PlanningOverview
 import ui.YearOverview
 
 @Composable
@@ -32,7 +33,7 @@ fun App() {
                 navController = navController, startDestination = "home"
             ) {
                 composable(route = "home") {
-                    YearOverview(2024)
+                    PlanningOverview()
 //                    HomeScreen(navController)
                 }
 

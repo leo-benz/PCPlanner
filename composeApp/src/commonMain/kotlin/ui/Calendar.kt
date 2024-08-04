@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
+import model.Standchen
 import java.time.format.TextStyle
 import java.util.*
 
@@ -20,6 +21,8 @@ import java.util.*
 // Highlight Number of Birthdays on each day
 // Highlight Number of potential standchen
 // Select standchen sonntage
+// Show details for standchen or other date
+// Print monthly invites
 
 private val LocalDate.daysInMonth: Int
     get() {
@@ -29,7 +32,7 @@ private val LocalDate.daysInMonth: Int
     }
 
 @Composable
-fun YearOverview(year: Int) {
+fun YearOverview(year: Int, standchen: List<Standchen>, onStandchenSelected: (LocalDate) -> Unit) {
     BoxWithConstraints (modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         val minWidth = 110
         val spacing = 16

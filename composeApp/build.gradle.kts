@@ -56,8 +56,11 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3)
+            implementation(compose.material)
+            implementation(libs.material.icons.extended)
 
             api(libs.koin.core)
+
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.lifecycle.viewmodel)
@@ -67,6 +70,11 @@ kotlin {
             implementation(libs.sqlite.bundled)
 
             implementation(libs.kotlinx.datetime)
+
+//            implementation(libs.ktor.client.core)
+//            implementation(libs.ktor.client.serialization)
+//            implementation(libs.ktor.client.content.negotiation)
+//            implementation(libs.ktor.serialization.kotlinx.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
