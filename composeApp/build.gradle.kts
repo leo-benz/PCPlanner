@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
@@ -57,7 +57,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(compose.material3)
             implementation(compose.material)
-            implementation(libs.material.icons.extended)
+//            implementation(libs.material.icons.extended)
 
             api(libs.koin.core)
 
@@ -71,10 +71,15 @@ kotlin {
 
             implementation(libs.kotlinx.datetime)
 
-//            implementation(libs.ktor.client.core)
-//            implementation(libs.ktor.client.serialization)
-//            implementation(libs.ktor.client.content.negotiation)
-//            implementation(libs.ktor.serialization.kotlinx.json)
+            api(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlinx.coroutines.core.jvm)
+
+            implementation(libs.kotlinx.serialization.core)
+            implementation(libs.ktor.client.serialization)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -86,6 +91,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.ktor.client.okhttp)
         }
     }
 }

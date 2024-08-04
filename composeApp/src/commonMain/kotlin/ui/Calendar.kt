@@ -2,11 +2,10 @@ package ui
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,6 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
 import model.Standchen
+import org.koin.compose.viewmodel.koinViewModel
+import viewmodel.PlanningViewModel
 import java.time.format.TextStyle
 import java.util.*
 
@@ -90,7 +91,7 @@ fun DaysOfMonthView(year: Int, month: Month, scrollState: ScrollState) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (day in 1..daysInMonth) {
-            DayCell(day, LocalDate(year, month, day).dayOfWeek, layoutModifier)
+            DayCell(LocalDate(year, month, day), layoutModifier)
         }
         for (i in 0..< 31-daysInMonth) {
             Box(layoutModifier)
@@ -99,16 +100,30 @@ fun DaysOfMonthView(year: Int, month: Month, scrollState: ScrollState) {
 }
 
 @Composable
-fun DayCell(day: Int, dayOfWeek: DayOfWeek, modifier: Modifier) {
-    val bgColor = when (dayOfWeek) {
+fun DayCell(day: LocalDate, modifier: Modifier) {
+    val viewModel = koinViewModel<PlanningViewModel>()
+
+    val dayOfWeek = day.dayOfWeek
+
+    val isHoliday by viewModel.isHoliday(day).collectAsState(initial = false)
+
+
+    var bgColor = when (dayOfWeek) {
         DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.background
+    }
+    if (isHoliday) {
+        bgColor = bgColor.darken(0.9f)
     }
     val fgColor = when (dayOfWeek) {
         DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.onPrimary
         else -> MaterialTheme.colorScheme.onBackground
     }
     Box(modifier = modifier.background(bgColor), contentAlignment = Alignment.Center) {
-        Text(text = day.toString(), Modifier.background(bgColor), color = fgColor)
+        Text(text = day.dayOfMonth.toString(), Modifier.background(bgColor), color = fgColor)
     }
+}
+
+private fun Color.darken(fl: Float): Color {
+    return Color(red = red * fl, green = green * fl, blue = blue * fl, alpha = alpha)
 }
