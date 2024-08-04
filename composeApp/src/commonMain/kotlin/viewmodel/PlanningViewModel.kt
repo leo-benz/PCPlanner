@@ -17,10 +17,6 @@ class PlanningViewModel(
     private val standchenRepository: StandchenRepository
 ) : ViewModel() {
 
-    init {
-
-    }
-
     var year = MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year)
 
     var isInitialized: StateFlow<Boolean> = year.flatMapLatest { year ->
@@ -41,25 +37,31 @@ class PlanningViewModel(
         viewModelScope.launch {
             cachedHoliday.first().let { holiday ->
                 val standchenList = mutableListOf<Standchen>()
-                for (month in 1..12) {
-                    val firstSunday = getFirstSunday(year.value, month)
+//                for (month in 1..12) {
+                    val firstSunday = getFirstSunday(year.value, 1)
                     var day = firstSunday
-                    var week = 1
-                    while (day.monthNumber == month) {
-                        if (week == 2) {
-                            day = day.plusDays(7)
-                            week = 1
-                            continue
-                        }
+                    var month = firstSunday.month
+                    var sundayCount = 1
+                    var skipWeek = false
+                    while (day.year == year.value) {
                         if (day in holiday.startDate..holiday.endDate) {
-                            day = day.plusDays(7)
-                            continue
+                            skipWeek = true
                         }
-                        standchenList.add(Standchen(day, false))
+                        if (sundayCount == 2) {
+                            skipWeek = true
+                        }
+                        if (!skipWeek) {
+                            standchenList.add(Standchen(day, false))
+                        }
                         day = day.plusDays(7)
-                        week++
+                        skipWeek = !skipWeek
+                        sundayCount++
+                        if (day.month != month) {
+                            month = day.month
+                            sundayCount = 1
+                        }
                     }
-                }
+//                }
                 standchenRepository.insert(standchenList)
             }
         }
@@ -76,6 +78,12 @@ class PlanningViewModel(
     fun isHoliday(day: LocalDate): Flow<Boolean> {
         return cachedHoliday.map { holiday ->
             day in holiday.startDate..holiday.endDate
+        }
+    }
+
+    fun isStandchen(day: LocalDate): Flow<Boolean> {
+        return standchenRepository.getStandchen(year.value).map { standchenList ->
+            standchenList.any { it.date == day }
         }
     }
 }

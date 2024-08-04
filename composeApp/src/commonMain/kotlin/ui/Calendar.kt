@@ -106,22 +106,29 @@ fun DayCell(day: LocalDate, modifier: Modifier) {
     val dayOfWeek = day.dayOfWeek
 
     val isHoliday by viewModel.isHoliday(day).collectAsState(initial = false)
-
+    val isStandchen by viewModel.isStandchen(day).collectAsState(initial = false)
 
     var bgColor = when (dayOfWeek) {
-        DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.primary
+        DayOfWeek.SUNDAY -> if (isStandchen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.background
     }
+
+    var fgColor = when (dayOfWeek) {
+        DayOfWeek.SUNDAY -> if (isStandchen) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onBackground
+    }
+
     if (isHoliday) {
         bgColor = bgColor.darken(0.9f)
     }
-    val fgColor = when (dayOfWeek) {
-        DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.onPrimary
-        else -> MaterialTheme.colorScheme.onBackground
-    }
+
     Box(modifier = modifier.background(bgColor), contentAlignment = Alignment.Center) {
         Text(text = day.dayOfMonth.toString(), Modifier.background(bgColor), color = fgColor)
     }
+}
+
+private fun Color.lighen(fl: Float): Color {
+    return Color(red = red + (1 - red) * fl, green = green + (1 - green) * fl, blue = blue + (1 - blue) * fl, alpha = alpha)
 }
 
 private fun Color.darken(fl: Float): Color {
