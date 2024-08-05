@@ -32,7 +32,7 @@ datetime = "0.6.0"
 material3Desktop = "1.6.11"
 materialIconsExtended = "1.6.8"
 
-ktor = "2.3.6"
+ktor = "2.3.12"
 coroutines_version = "1.9.0-RC"
 serialization_version = "1.7.1"
 
