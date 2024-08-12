@@ -40,7 +40,9 @@ class JubilareViewModel(
         val comment = "Random Comment ${Random.nextInt(1000)}"
         val marriageAnniversary = anniversaries.random()
 
+
         return Jubilar(
+            jubilarId = 0,
             firstName = firstName,
             lastName = lastName,
             birthdate = birthdate,

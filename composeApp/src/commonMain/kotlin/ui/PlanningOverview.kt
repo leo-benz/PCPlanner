@@ -9,9 +9,7 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
 //import androidx.compose.material.icons.filled.ChevronLeft
 //import androidx.compose.material.icons.filled.ChevronRight
 //import androidx.compose.material.icons.outlined.PendingActions
@@ -26,11 +24,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
+import viewmodel.JubilareViewModel
 import viewmodel.PlanningViewModel
 
 @Composable
 fun PlanningOverview() {
     val viewModel = koinViewModel<PlanningViewModel>()
+    val jubilareViewModel = koinViewModel<JubilareViewModel>()
+
     val year by viewModel.year.collectAsState()
     val isInitialized by viewModel.isInitialized.collectAsState(initial = false)
 
@@ -44,15 +45,24 @@ fun PlanningOverview() {
 
             },
             actions = {
+                IconButton(onClick = {
+                    jubilareViewModel.insertRandomJubilar()
+                }) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Previous Year")
+                }
                 if (!isInitialized) {
                     IconButton(onClick = { viewModel.generateInitialStandchen() }) {
                         Icon(Icons.Default.Add, contentDescription = "Generate Standchen")
+                    }
+                } else {
+                    IconButton(onClick = { viewModel.assignJubilareToStandchen() }) {
+                        Icon(Icons.Default.Call, contentDescription = "Assign Standchen")
                     }
                 }
             }
         ) }
     ) {
-        YearOverview(year, emptyList()) { }
+        YearOverview(year)
     }
 }
 

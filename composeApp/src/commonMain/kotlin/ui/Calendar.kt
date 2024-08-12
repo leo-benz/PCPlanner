@@ -12,8 +12,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
+import model.Jubilar
 import model.Standchen
 import org.koin.compose.viewmodel.koinViewModel
+import viewmodel.JubilareViewModel
 import viewmodel.PlanningViewModel
 import java.time.format.TextStyle
 import java.util.*
@@ -33,7 +35,7 @@ private val LocalDate.daysInMonth: Int
     }
 
 @Composable
-fun YearOverview(year: Int, standchen: List<Standchen>, onStandchenSelected: (LocalDate) -> Unit) {
+fun YearOverview(year: Int) {
     BoxWithConstraints (modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         val minWidth = 110
         val spacing = 16
@@ -99,6 +101,7 @@ fun DaysOfMonthView(year: Int, month: Month, scrollState: ScrollState) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DayCell(day: LocalDate, modifier: Modifier) {
     val viewModel = koinViewModel<PlanningViewModel>()
@@ -107,6 +110,7 @@ fun DayCell(day: LocalDate, modifier: Modifier) {
 
     val isHoliday by viewModel.isHoliday(day).collectAsState(initial = false)
     val isStandchen by viewModel.isStandchen(day).collectAsState(initial = false)
+    val isJubilarDay by viewModel.isJubilarDay(day).collectAsState(initial = false)
 
     var bgColor = when (dayOfWeek) {
         DayOfWeek.SUNDAY -> if (isStandchen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
@@ -122,7 +126,13 @@ fun DayCell(day: LocalDate, modifier: Modifier) {
         bgColor = bgColor.darken(0.9f)
     }
 
-    Box(modifier = modifier.background(bgColor), contentAlignment = Alignment.Center) {
+    if (isJubilarDay) {
+        bgColor = bgColor.darken(0.7f)
+    }
+
+    Box(modifier = modifier.background(bgColor).onClick {
+        viewModel.onDaySelected(day)
+    }, contentAlignment = Alignment.Center) {
         Text(text = day.dayOfMonth.toString(), Modifier.background(bgColor), color = fgColor)
     }
 }

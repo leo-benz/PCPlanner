@@ -2,7 +2,9 @@ package database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 import model.Jubilar
+import model.JubilarWithInvites
 
 @Dao
 interface JubilarDao {
@@ -24,4 +26,12 @@ interface JubilarDao {
 
     @Delete
     suspend fun delete(jubilar: Jubilar)
+
+    @Transaction
+    @Query("SELECT * FROM Jubilar WHERE strftime('%m-%d', birthdate) = strftime('%m-%d', :date)")
+    fun getJubilare(date: LocalDate): Flow<List<Jubilar>>
+
+    @Transaction
+    @Query("SELECT * FROM Jubilar WHERE strftime('%m-%d', birthdate) = strftime('%m-%d', :date)")
+    fun getJubilareWithInvites(date: LocalDate): Flow<List<JubilarWithInvites>>
 }

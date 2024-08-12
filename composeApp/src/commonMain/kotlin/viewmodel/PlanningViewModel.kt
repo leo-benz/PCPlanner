@@ -2,19 +2,19 @@ package viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
-import model.Standchen
+import model.*
 import org.openapitools.client.models.HolidayResponse
+import repository.JubilareRepository
 //import org.openapitools.client.apis.HolidaysApi
 import repository.StandchenRepository
-import java.io.Console
 import java.time.DayOfWeek
 
 class PlanningViewModel(
-    private val standchenRepository: StandchenRepository
+    private val standchenRepository: StandchenRepository,
+    private val jubilareRepository: JubilareRepository
 ) : ViewModel() {
 
     var year = MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year)
@@ -37,7 +37,6 @@ class PlanningViewModel(
         viewModelScope.launch {
             cachedHoliday.first().let { holiday ->
                 val standchenList = mutableListOf<Standchen>()
-//                for (month in 1..12) {
                     val firstSunday = getFirstSunday(year.value, 1)
                     var day = firstSunday
                     var month = firstSunday.month
@@ -51,7 +50,7 @@ class PlanningViewModel(
                             skipWeek = true
                         }
                         if (!skipWeek) {
-                            standchenList.add(Standchen(day, false))
+                            standchenList.add(Standchen(day))
                         }
                         day = day.plusDays(7)
                         skipWeek = !skipWeek
@@ -61,10 +60,38 @@ class PlanningViewModel(
                             sundayCount = 1
                         }
                     }
-//                }
                 standchenRepository.insert(standchenList)
             }
         }
+    }
+
+    fun assignJubilareToStandchen() {
+        viewModelScope.launch {
+            val standchenList = standchenRepository.getStandchen(year.value).first()
+            var jubilare = jubilareRepository.getJubilare().first()
+            jubilare = jubilare.filter {
+                val age = year.value - it.birthdate.year
+                var eligible = age == 80 || age >= 85 || it.marriageAnniversary != MarriageAnniversary.NONE
+
+                eligible = true // FIXME: Remove this line to enable the age check
+
+                return@filter eligible
+            }
+            jubilare = jubilare.sortedBy { LocalDate(year.value, it.birthdate.monthNumber, it.birthdate.dayOfMonth) }
+            var currentStandchen = standchenList.first()
+            for (ju in jubilare) {
+                val currentBirthday = LocalDate(year.value, ju.birthdate.monthNumber, ju.birthdate.dayOfMonth)
+                if (currentStandchen.date < currentBirthday) {
+                    currentStandchen = standchenList.first { it.date > currentBirthday }
+                }
+                invite(ju, currentStandchen)
+            }
+        }
+    }
+
+    private fun invite(jubilar: Jubilar, standchen: Standchen) {
+        var invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId)
+        standchenRepository.insert(invite)
     }
 
     private fun getFirstSunday(year: Int, month: Int): LocalDate {
@@ -84,6 +111,20 @@ class PlanningViewModel(
     fun isStandchen(day: LocalDate): Flow<Boolean> {
         return standchenRepository.getStandchen(year.value).map { standchenList ->
             standchenList.any { it.date == day }
+        }
+    }
+
+    fun isJubilarDay(day: LocalDate): Flow<Boolean> {
+        return jubilareRepository.getJubilare().map { jubilareList ->
+            jubilareList.any { it.birthdate.monthNumber == day.monthNumber && it.birthdate.dayOfMonth == day.dayOfMonth }
+        }
+    }
+
+    fun onDaySelected(day: LocalDate) {
+        viewModelScope.launch {
+            println("Day selected: $day")
+            println("Standchen: ${standchenRepository.getStandchenWithJubilare(day).first()}")
+            println("Jubilare: ${jubilareRepository.getJubilareWithInvites(day).first()}")
         }
     }
 }

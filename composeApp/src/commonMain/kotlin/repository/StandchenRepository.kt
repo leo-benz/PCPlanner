@@ -8,6 +8,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import model.Standchen
+import model.StandchenInvite
+import model.StandchenWithJubilare
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.inject
@@ -17,8 +19,11 @@ import org.openapitools.client.models.HolidayType
 
 interface StandchenRepository {
     fun getStandchen(year: Int): Flow<List<Standchen>>
+    fun getStandchen(date: LocalDate): Flow<Standchen?>
+    fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?>
     fun insert(standchen: List<Standchen>)
     suspend fun getSummerHoliday(year: Int): HolidayResponse?
+    fun insert(invite: StandchenInvite)
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -30,9 +35,23 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         return database.standchenDao().getStandchen(year)
     }
 
+    override fun getStandchen(date: LocalDate): Flow<Standchen?> {
+        return database.standchenDao().getSingleStandchen(date)
+    }
+
+    override fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?> {
+        return database.standchenDao().getStandchenWithJubilare(date)
+    }
+
     override fun insert(standchen: List<Standchen>) {
         coroutineScope.launch {
             database.standchenDao().insert(standchen)
+        }
+    }
+
+    override fun insert(invite: StandchenInvite) {
+        coroutineScope.launch {
+            database.standchenDao().insert(invite)
         }
     }
 
