@@ -130,7 +130,7 @@ fun DayCell(day: LocalDate, modifier: Modifier) {
         bgColor = bgColor.darken(0.7f)
     }
 
-    Box(modifier = modifier.background(bgColor).onClick {
+    Box(modifier = modifier.background(bgColor).clickable {
         viewModel.onDaySelected(day)
     }, contentAlignment = Alignment.Center) {
         Text(text = day.dayOfMonth.toString(), Modifier.background(bgColor), color = fgColor)
