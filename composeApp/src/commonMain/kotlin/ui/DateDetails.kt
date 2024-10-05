@@ -16,8 +16,6 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
-import kotlinx.datetime.format.DateTimeFormat
-import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
 import model.GERMAN_FULL
@@ -77,7 +75,7 @@ fun DateDetails(modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     if (jubilare.isNotEmpty()) {
-                        TextButton(onClick = { viewModel.print(jubilare.first(), date.year) }) {
+                        TextButton(onClick = { viewModel.print(jubilare, date.year) }) {
                             Text("Print")
                         }
                     }

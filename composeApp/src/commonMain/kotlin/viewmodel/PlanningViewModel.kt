@@ -5,7 +5,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
@@ -15,7 +14,20 @@ import model.*
 import org.docx4j.XmlUtils
 import org.docx4j.model.datastorage.migration.VariablePrepare
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage
+import org.docx4j.openpackaging.parts.CustomXmlPart
+import org.docx4j.openpackaging.parts.DocPropsCorePart
+import org.docx4j.openpackaging.parts.DocPropsExtendedPart
+import org.docx4j.openpackaging.parts.PartName
+import org.docx4j.openpackaging.parts.ThemePart
+import org.docx4j.openpackaging.parts.WordprocessingML.BibliographyPart
+import org.docx4j.openpackaging.parts.WordprocessingML.BinaryPartAbstractImage
+import org.docx4j.openpackaging.parts.WordprocessingML.DocumentSettingsPart
+import org.docx4j.openpackaging.parts.WordprocessingML.EndnotesPart
+import org.docx4j.openpackaging.parts.WordprocessingML.FontTablePart
+import org.docx4j.openpackaging.parts.WordprocessingML.HeaderPart
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart
+import org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart
+import org.docx4j.wml.STBrType
 import org.openapitools.client.models.HolidayResponse
 import repository.JubilareRepository
 import repository.StandchenRepository
@@ -168,36 +180,58 @@ class PlanningViewModel(
 
     // TODO: Use different template for standchen after sommerferien
 
-    fun print(first: Jubilar, year: Int) {
+    fun print(jubilare: List<Jubilar>, year: Int) {
         viewModelScope.launch {
-            val standchen = standchenRepository.getStandchen(first, year).first()
-            val placeholders = mapOf(
-                "firstName" to if (first.gender == Gender.OTHER) "Ehepaar" else first.firstName,
-                "lastName" to first.lastName,
-                "address" to first.address,
-                "letterDate" to first.birthdate.format(LocalDate.Format { monthName(MonthNames.GERMAN_FULL); char(' '); year() }),
-                "greeting" to "Sehr geehrte${
-                    when (first.gender) {
-                        Gender.MALE -> "r Herr"; Gender.FEMALE -> " Frau"; Gender.OTHER -> "es Ehepaar"; }
-                }",
-                "eventPronoun" to if (first.marriageAnniversary != MarriageAnniversary.NONE) "Ihrer" else "Ihrem",
-                "eventDescription" to when (first.marriageAnniversary) {
-                    MarriageAnniversary.NONE -> "${year - first.birthdate.year}. Geburtstag"
-                    MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
-                    MarriageAnniversary.IRON -> "Eiserne Hochzeit"
-                    MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
-                    MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
-                    else -> "Geburtstag"
-                },
-                "standchenDate" to standchen.date.format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() }),
-                "standchenFeedbackDate" to standchen.date.minusDays(5).format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
-            );
 
-            fillPlaceholdersInWordDocument(
-                "/Users/leobenz/Downloads/Anschreiben_Jubilare.docx",
-                "/Users/leobenz/Downloads/Anschreiben_Jubilare_processed.docx",
-                placeholders
-            )
+            val wordMLPackage = WordprocessingMLPackage.load(File("/Users/leobenz/Developer/Private/PCPlanner/composeApp/template/Anschreiben_Jubilare.docx"))
+            val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
+            VariablePrepare.prepare(wordMLPackage)
+            val template = XmlUtils.deepCopy(mainDocumentPart.contents)
+
+
+            for (jubilar in jubilare) {
+                val standchen = standchenRepository.getStandchen(jubilar, year).first()
+                val letterDate = getCurrentLocalDate()
+                val placeholders = mapOf(
+                    "firstName" to if (jubilar.gender == Gender.OTHER) "Ehepaar" else jubilar.firstName,
+                    "lastName" to jubilar.lastName,
+                    "address" to jubilar.address,
+                    "letterDate" to letterDate.format(LocalDate.Format {
+                        monthName(MonthNames.GERMAN_FULL); char(
+                        ' '
+                    ); year()
+                    }),
+                    "greeting" to "Sehr geehrte${
+                        when (jubilar.gender) {
+                            Gender.MALE -> "r Herr"; Gender.FEMALE -> " Frau"; Gender.OTHER -> "es Ehepaar"; }
+                    }",
+                    "eventPronoun" to if (jubilar.marriageAnniversary != MarriageAnniversary.NONE) "Ihrer" else "Ihrem",
+                    "eventDescription" to when (jubilar.marriageAnniversary) {
+                        MarriageAnniversary.NONE -> "${year - jubilar.birthdate.year}. Geburtstag"
+                        MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
+                        MarriageAnniversary.IRON -> "Eiserne Hochzeit"
+                        MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
+                        MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
+                        else -> "Geburtstag"
+                    },
+                    "standchenDate" to standchen.date.format(LocalDate.Format {
+                        dayOfMonth(); char('.'); monthNumber(); char(
+                        '.'
+                    ); year()
+                    }),
+                    "standchenFeedbackDate" to standchen.date.minusDays(5)
+                        .format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
+                );
+
+                mainDocumentPart.variableReplace(placeholders)
+
+                if (jubilar != jubilare.last()) {
+                    mainDocumentPart.contents.body.content.addAll(template.body.content)
+                }
+            }
+
+            // Save the new document
+            wordMLPackage.save(File("/Users/leobenz/Downloads/Anschreiben_Jubilare_combined.docx"))
             println("printed!!!")
         }
     }
@@ -207,14 +241,13 @@ class PlanningViewModel(
     // TODO: Naming schema for the output files
     // TODO: Print button for individual jubilare, all jubilare for a standchen, all jubilare of a month and a manual date range
 
-    fun fillPlaceholdersInWordDocument(inputFilePath: String, outputFilePath: String, placeholders: Map<String, String>) {
-        val wordMLPackage = WordprocessingMLPackage.load(File(inputFilePath))
-        val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
-
-        VariablePrepare.prepare(wordMLPackage)
-        mainDocumentPart.variableReplace(placeholders)
-        wordMLPackage.save(File(outputFilePath))
-    }
+//    fun fillPlaceholdersInWordDocument(inputFilePath: String, outputFilePath: String, placeholders: Map<String, String>) {
+//        val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
+//
+//        VariablePrepare.prepare(wordMLPackage)
+//        mainDocumentPart.variableReplace(placeholders)
+//        wordMLPackage.save(File(outputFilePath))
+//    }
 }
 
 private fun LocalDate.plusDays(i: Int): LocalDate {
