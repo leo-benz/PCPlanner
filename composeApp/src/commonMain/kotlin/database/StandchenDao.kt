@@ -1,9 +1,6 @@
 package database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Transaction
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import model.Standchen
@@ -12,11 +9,17 @@ import model.StandchenWithJubilare
 
 @Dao
 interface StandchenDao {
-    @Query("SELECT * FROM Standchen WHERE strftime('%Y', date) = CAST(:year AS TEXT)")
+    @Query("SELECT * FROM Standchen WHERE strftime('%Y', date) = CAST(:year AS TEXT) ORDER BY date")
     fun getStandchen(year: Int): Flow<List<Standchen>>
 
     @Insert
     suspend fun insert(standchen: List<Standchen>)
+
+    @Insert
+    suspend fun insert(standchen: Standchen)
+
+    @Delete
+    suspend fun delete(standchen: Standchen)
 
 //    @Transaction
 //    @Query("SELECT * FROM Standchen WHERE strftime('%Y', date) = CAST(:year AS TEXT)")
@@ -30,6 +33,6 @@ interface StandchenDao {
     @Query("SELECT * FROM Standchen WHERE date = :date")
     fun getSingleStandchen(date: LocalDate): Flow<Standchen?>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(invite: StandchenInvite)
 }

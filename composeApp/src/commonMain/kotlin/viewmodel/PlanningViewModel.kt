@@ -1,5 +1,7 @@
 package viewmodel
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
@@ -16,6 +18,8 @@ class PlanningViewModel(
     private val standchenRepository: StandchenRepository,
     private val jubilareRepository: JubilareRepository
 ) : ViewModel() {
+
+    var dateDetails: MutableState<LocalDate?> = mutableStateOf(null)
 
     var year = MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year)
 
@@ -125,6 +129,32 @@ class PlanningViewModel(
             println("Day selected: $day")
             println("Standchen: ${standchenRepository.getStandchenWithJubilare(day).first()}")
             println("Jubilare: ${jubilareRepository.getJubilareWithInvites(day).first()}")
+
+            dateDetails.value = day;
+        }
+    }
+
+    fun dismissDateDetails() {
+        dateDetails.value = null
+    }
+
+    fun toggleStandchen(date: LocalDate) {
+        viewModelScope.launch {
+            val standchen = standchenRepository.getStandchen(date).first()
+            if (standchen != null) {
+                standchenRepository.remove(standchen)
+            } else {
+                standchenRepository.insert(Standchen(date))
+            }
+            assignJubilareToStandchen()
+        }
+    }
+
+    fun jubilare(date: LocalDate): Flow<List<Jubilar>> {
+        val jubilareFlow = jubilareRepository.getJubilare(date)
+        val standchenJubilareFlow = standchenRepository.getStandchenWithJubilare(date).map { it?.jubilare ?: emptyList() }
+        return combine(jubilareFlow, standchenJubilareFlow) { jubilare, standchenJubilare ->
+            (jubilare + standchenJubilare).distinctBy { it.jubilarId }
         }
     }
 }

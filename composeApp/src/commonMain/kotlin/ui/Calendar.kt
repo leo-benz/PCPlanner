@@ -36,6 +36,7 @@ private val LocalDate.daysInMonth: Int
 
 @Composable
 fun YearOverview(year: Int) {
+
     BoxWithConstraints (modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         val minWidth = 110
         val spacing = 16
@@ -62,6 +63,8 @@ fun YearOverview(year: Int) {
             }
         }
     }
+
+    DateDetails()
 }
 
 @Composable

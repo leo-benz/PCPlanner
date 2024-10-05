@@ -22,6 +22,8 @@ interface StandchenRepository {
     fun getStandchen(date: LocalDate): Flow<Standchen?>
     fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?>
     fun insert(standchen: List<Standchen>)
+    suspend fun insert(standchen: Standchen)
+    suspend fun remove(standchen: Standchen)
     suspend fun getSummerHoliday(year: Int): HolidayResponse?
     fun insert(invite: StandchenInvite)
 }
@@ -49,10 +51,18 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         }
     }
 
+    override suspend fun insert(standchen: Standchen) {
+        database.standchenDao().insert(standchen)
+    }
+
     override fun insert(invite: StandchenInvite) {
         coroutineScope.launch {
             database.standchenDao().insert(invite)
         }
+    }
+
+    override suspend fun remove(standchen: Standchen) {
+        database.standchenDao().delete(standchen)
     }
 
     override suspend fun getSummerHoliday(year: Int): HolidayResponse? {
