@@ -24,13 +24,14 @@ data class Standchen (
         )
     ],
     indices = [
-        Index(value = ["date", "jubilarId"], unique = true),
+        Index(value = ["year", "jubilarId"], unique = true),
     ])
 data class StandchenInvite (
     @PrimaryKey(autoGenerate = true) val id: Int,
     val accepted: Boolean,
     val date: LocalDate,
-    val jubilarId: Int
+    val jubilarId: Int,
+    val year: Int = date.year
 )
 
 data class StanchenInviteWithStandchen (

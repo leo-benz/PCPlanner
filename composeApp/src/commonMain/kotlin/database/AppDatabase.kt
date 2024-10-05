@@ -7,20 +7,16 @@ import model.Jubilar
 import model.Standchen
 import model.StandchenInvite
 
-@Database(entities = [Jubilar::class, Standchen::class, StandchenInvite::class], version = 11)
+@Database(entities = [Jubilar::class, Standchen::class, StandchenInvite::class], version = 12)
 @TypeConverters(LocalDateConverter::class)
 abstract class AppDatabase: RoomDatabase(), DB {
     abstract fun jubilarDao(): JubilarDao
     abstract fun standchenDao(): StandchenDao
-
-    override fun clearAllTables() {
-        super.clearAllTables()
-    }
 
 }
 
 internal const val dbFileName = "Jubilare.db"
 
 interface DB {
-    fun clearAllTables(): Unit {}
+    fun clearAllTables() {}
 }

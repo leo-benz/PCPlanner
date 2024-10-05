@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 11,
+    "version": 12,
     "identityHash": "1ef9f8768a160cd5205a79c0d5cda525",
     "entities": [
       {
@@ -117,7 +117,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "_year",
+            "fieldPath": "year",
             "columnName": "year",
             "affinity": "INTEGER",
             "notNull": true
