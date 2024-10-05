@@ -29,6 +29,11 @@ interface StandchenDao {
     @Query("SELECT * FROM Standchen WHERE date = :date")
     fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?>
 
+    @Query("""SELECT s.* FROM Standchen s
+            INNER JOIN StandchenInvite si ON s.date = si.date
+            WHERE si.jubilarId = :jubilarId AND strftime('%Y', s.date) = CAST(:year AS TEXT)""")
+    fun getStandchen(jubilarId: Int, year: Int): Flow<Standchen>
+
     @Transaction
     @Query("SELECT * FROM Standchen WHERE date = :date")
     fun getSingleStandchen(date: LocalDate): Flow<Standchen?>

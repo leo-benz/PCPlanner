@@ -20,6 +20,7 @@ import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
+import model.GERMAN_FULL
 import org.koin.compose.viewmodel.koinViewModel
 import viewmodel.PlanningViewModel
 
@@ -45,8 +46,8 @@ fun DateDetails(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = date.format(LocalDate.Format { dayOfWeek(DayOfWeekNames.ENGLISH_FULL); chars(", "); dayOfMonth(); chars(". "); monthName(
-                    MonthNames.ENGLISH_FULL
+                Text(text = date.format(LocalDate.Format { dayOfWeek(DayOfWeekNames.GERMAN_FULL); chars(", "); dayOfMonth(); chars(". "); monthName(
+                    MonthNames.GERMAN_FULL
                 ) }), style = MaterialTheme.typography.titleLarge)
                 if (date.dayOfWeek == DayOfWeek.SUNDAY) {
                     Row (
@@ -75,6 +76,11 @@ fun DateDetails(modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
+                    if (jubilare.isNotEmpty()) {
+                        TextButton(onClick = { viewModel.print(jubilare.first(), date.year) }) {
+                            Text("Print")
+                        }
+                    }
                     TextButton(onClick = { viewModel.dismissDateDetails() }) {
                         Text("Schließen")
                     }

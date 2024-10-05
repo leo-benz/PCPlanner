@@ -80,6 +80,8 @@ kotlin {
 
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.ktor.client.serialization)
+
+            implementation(libs.docx4j)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -1,17 +1,25 @@
 package viewmodel
 
+//import org.openapitools.client.apis.HolidaysApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
+import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.char
 import model.*
+import org.docx4j.XmlUtils
+import org.docx4j.model.datastorage.migration.VariablePrepare
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage
+import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart
 import org.openapitools.client.models.HolidayResponse
 import repository.JubilareRepository
-//import org.openapitools.client.apis.HolidaysApi
 import repository.StandchenRepository
+import java.io.File
 import java.time.DayOfWeek
 
 class PlanningViewModel(
@@ -41,29 +49,29 @@ class PlanningViewModel(
         viewModelScope.launch {
             cachedHoliday.first().let { holiday ->
                 val standchenList = mutableListOf<Standchen>()
-                    val firstSunday = getFirstSunday(year.value, 1)
-                    var day = firstSunday
-                    var month = firstSunday.month
-                    var sundayCount = 1
-                    var skipWeek = false
-                    while (day.year == year.value) {
-                        if (day in holiday.startDate..holiday.endDate) {
-                            skipWeek = true
-                        }
-                        if (sundayCount == 2) {
-                            skipWeek = true
-                        }
-                        if (!skipWeek) {
-                            standchenList.add(Standchen(day))
-                        }
-                        day = day.plusDays(7)
-                        skipWeek = !skipWeek
-                        sundayCount++
-                        if (day.month != month) {
-                            month = day.month
-                            sundayCount = 1
-                        }
+                val firstSunday = getFirstSunday(year.value, 1)
+                var day = firstSunday
+                var month = firstSunday.month
+                var sundayCount = 1
+                var skipWeek = false
+                while (day.year == year.value) {
+                    if (day in holiday.startDate..holiday.endDate) {
+                        skipWeek = true
                     }
+                    if (sundayCount == 2) {
+                        skipWeek = true
+                    }
+                    if (!skipWeek) {
+                        standchenList.add(Standchen(day))
+                    }
+                    day = day.plusDays(7)
+                    skipWeek = !skipWeek
+                    sundayCount++
+                    if (day.month != month) {
+                        month = day.month
+                        sundayCount = 1
+                    }
+                }
                 standchenRepository.insert(standchenList)
             }
         }
@@ -157,8 +165,66 @@ class PlanningViewModel(
             (jubilare + standchenJubilare).distinctBy { it.jubilarId }
         }
     }
+
+    // TODO: Use different template for standchen after sommerferien
+
+    fun print(first: Jubilar, year: Int) {
+        viewModelScope.launch {
+            val standchen = standchenRepository.getStandchen(first, year).first()
+            val placeholders = mapOf(
+                "firstName" to if (first.gender == Gender.OTHER) "Ehepaar" else first.firstName,
+                "lastName" to first.lastName,
+                "address" to first.address,
+                "letterDate" to first.birthdate.format(LocalDate.Format { monthName(MonthNames.GERMAN_FULL); char(' '); year() }),
+                "greeting" to "Sehr geehrte${
+                    when (first.gender) {
+                        Gender.MALE -> "r Herr"; Gender.FEMALE -> " Frau"; Gender.OTHER -> "es Ehepaar"; }
+                }",
+                "eventPronoun" to if (first.marriageAnniversary != MarriageAnniversary.NONE) "Ihrer" else "Ihrem",
+                "eventDescription" to when (first.marriageAnniversary) {
+                    MarriageAnniversary.NONE -> "${year - first.birthdate.year}. Geburtstag"
+                    MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
+                    MarriageAnniversary.IRON -> "Eiserne Hochzeit"
+                    MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
+                    MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
+                    else -> "Geburtstag"
+                },
+                "standchenDate" to standchen.date.format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() }),
+                "standchenFeedbackDate" to standchen.date.minusDays(5).format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
+            );
+
+            fillPlaceholdersInWordDocument(
+                "/Users/leobenz/Downloads/Anschreiben_Jubilare.docx",
+                "/Users/leobenz/Downloads/Anschreiben_Jubilare_processed.docx",
+                placeholders
+            )
+            println("printed!!!")
+        }
+    }
+
+
+    // TODO: File Picker with Settings for the input location with the templates and the output location (folder)
+    // TODO: Naming schema for the output files
+    // TODO: Print button for individual jubilare, all jubilare for a standchen, all jubilare of a month and a manual date range
+
+    fun fillPlaceholdersInWordDocument(inputFilePath: String, outputFilePath: String, placeholders: Map<String, String>) {
+        val wordMLPackage = WordprocessingMLPackage.load(File(inputFilePath))
+        val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
+
+        VariablePrepare.prepare(wordMLPackage)
+        mainDocumentPart.variableReplace(placeholders)
+        wordMLPackage.save(File(outputFilePath))
+    }
 }
 
 private fun LocalDate.plusDays(i: Int): LocalDate {
     return this.plus(i, DateTimeUnit.DAY)
+}
+
+private fun LocalDate.minusDays(i: Int): LocalDate {
+    return this.minus(i, DateTimeUnit.DAY)
+}
+
+fun getCurrentLocalDate(): LocalDate {
+    return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
+import model.Jubilar
 import model.Standchen
 import model.StandchenInvite
 import model.StandchenWithJubilare
@@ -26,6 +27,7 @@ interface StandchenRepository {
     suspend fun remove(standchen: Standchen)
     suspend fun getSummerHoliday(year: Int): HolidayResponse?
     fun insert(invite: StandchenInvite)
+    fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -39,6 +41,10 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
 
     override fun getStandchen(date: LocalDate): Flow<Standchen?> {
         return database.standchenDao().getSingleStandchen(date)
+    }
+
+    override fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen> {
+        return database.standchenDao().getStandchen(jubilar.jubilarId, year)
     }
 
     override fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?> {
