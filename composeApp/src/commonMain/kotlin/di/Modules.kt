@@ -11,6 +11,7 @@ import org.koin.dsl.module
 import repository.StandchenRepository
 import repository.StandchenRepositoryImpl
 import viewmodel.PlanningViewModel
+import viewmodel.ImportViewModel
 
 expect val platformModule: Module
 
@@ -20,4 +21,6 @@ val sharedModule = module {
 
     singleOf(::StandchenRepositoryImpl).bind<StandchenRepository>()
     viewModelOf(::PlanningViewModel)
+
+    viewModelOf(::ImportViewModel)
 }

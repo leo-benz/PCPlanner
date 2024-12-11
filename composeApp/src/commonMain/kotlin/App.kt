@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinContext
+import ui.JubilareImport
 import ui.JubilareOverview
 import ui.PlanningOverview
 import ui.YearOverview
@@ -33,12 +34,19 @@ fun App() {
                 navController = navController, startDestination = "home"
             ) {
                 composable(route = "home") {
-                    PlanningOverview()
-//                    HomeScreen(navController)
+                    HomeScreen(navController)
                 }
 
                 composable(route = "jubilare") {
                     JubilareOverview { navController.popBackStack() }
+                }
+
+                composable(route = "planning") {
+                    PlanningOverview { navController.popBackStack() }
+                }
+
+                composable(route = "import") {
+                    JubilareImport { navController.popBackStack() }
                 }
             }
         }
@@ -58,8 +66,15 @@ fun HomeScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Button(onClick = { navController.navigate("jubilare") }) {
                 Text("Jubilare Übersicht")
+            }
+            Button(onClick = { navController.navigate("planning") }) {
+                Text("Planung")
+            }
+            Button(onClick = { navController.navigate("import") }) {
+                Text("Import")
             }
         }
     }

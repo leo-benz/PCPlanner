@@ -24,11 +24,13 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 import viewmodel.JubilareViewModel
 import viewmodel.PlanningViewModel
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
-fun PlanningOverview() {
+fun PlanningOverview(navigateBack: () -> Unit = {}) {
     val viewModel = koinViewModel<PlanningViewModel>()
     val jubilareViewModel = koinViewModel<JubilareViewModel>()
 
@@ -58,6 +60,13 @@ fun PlanningOverview() {
                     IconButton(onClick = { viewModel.assignJubilareToStandchen() }) {
                         Icon(Icons.Default.Call, contentDescription = "Assign Standchen")
                     }
+                }
+            }, navigationIcon = {
+                androidx.compose.material.IconButton(onClick = navigateBack) {
+                    androidx.compose.material.Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
                 }
             }
         ) }

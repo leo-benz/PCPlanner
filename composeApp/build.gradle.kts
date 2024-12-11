@@ -82,6 +82,18 @@ kotlin {
             implementation(libs.ktor.client.serialization)
 
             implementation(libs.docx4j)
+
+            // Enables FileKit without Compose dependencies
+            implementation(libs.filekit.core)
+
+            // Enables FileKit with Composable utilities
+            implementation(libs.filekit.compose)
+
+            // import Kotlin API client BOM
+            implementation(project.dependencies.platform(libs.openai.client.bom))
+
+            // define dependencies without versions
+            implementation(libs.openai.client)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

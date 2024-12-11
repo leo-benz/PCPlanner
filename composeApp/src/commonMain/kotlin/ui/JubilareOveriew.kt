@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import model.Jubilar
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 import viewmodel.JubilareViewModel
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun JubilareOverview(navigateBack: () -> Unit = {}) {
     val viewModel = koinViewModel<JubilareViewModel>()
