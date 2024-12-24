@@ -10,38 +10,56 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@Entity(inheritSuperIndices = true)
-open class Jubilar  constructor(
+@Entity
+data class JubilarEntity(
     @PrimaryKey val jubilarId: Uuid = Uuid.random(),
+    val type: JubilarType,              // Distinguish BIRTHDAY vs. ANNIVERSARY
     val lastName: String,
     val originalJubilarDate: LocalDate,
     val address: String,
     val optOut: Boolean,
     val comment: String,
+
+    // Fields specific to "BirthdayJubilar" – can be null for Anniversary
+    val firstName: String? = null,
+    val gender: Gender? = null
 )
 
-@Entity
-class BirthdayJubilar (
-    jubilarId: Uuid = Uuid.random(),
-    lastName: String,
-    originalJubilarDate: LocalDate,
-    address: String,
-    optOut: Boolean,
-    comment: String,
-    val firstName: String,
-    var gender: Gender
-) : Jubilar(jubilarId, lastName, originalJubilarDate, address, optOut, comment)
+/** e.g. an enum to store which "subclass" it represents */
+enum class JubilarType {
+    BIRTHDAY,
+    ANNIVERSARY
+}
 
-@Entity
-class AnniversaryJubilar(
-    jubilarId: Uuid = Uuid.random(),
-    lastName: String,
-    originalJubilarDate: LocalDate,
-    address: String,
-    optOut: Boolean,
-    comment: String,
-) : Jubilar(jubilarId, lastName, originalJubilarDate, address, optOut, comment) {
-    fun marriageAnniversary(year: Int = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year): MarriageAnniversary {
+sealed class Jubilar {
+    abstract val jubilarId: Uuid
+    abstract val lastName: String
+    abstract val originalJubilarDate: LocalDate
+    abstract val address: String
+    abstract val optOut: Boolean
+    abstract val comment: String
+}
+
+data class BirthdayJubilar(
+    override val jubilarId: Uuid,
+    override val lastName: String,
+    override val originalJubilarDate: LocalDate,
+    override val address: String,
+    override val optOut: Boolean,
+    override val comment: String,
+    val firstName: String,
+    val gender: Gender
+) : Jubilar()
+
+data class AnniversaryJubilar(
+    override val jubilarId: Uuid,
+    override val lastName: String,
+    override val originalJubilarDate: LocalDate,
+    override val address: String,
+    override val optOut: Boolean,
+    override val comment: String
+) : Jubilar() {
+    fun marriageAnniversary(year: Int  = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year): MarriageAnniversary {
         val years = year - originalJubilarDate.year
         return when (years) {
             70 -> MarriageAnniversary.PLATINUM
@@ -53,8 +71,56 @@ class AnniversaryJubilar(
     }
 }
 
+fun JubilarEntity.toDomain(): Jubilar {
+    return when (type) {
+        JubilarType.BIRTHDAY -> BirthdayJubilar(
+            jubilarId = jubilarId,
+            lastName = lastName,
+            originalJubilarDate = originalJubilarDate,
+            address = address,
+            optOut = optOut,
+            comment = comment,
+            firstName = this.firstName ?: "",
+            gender = this.gender ?: Gender.OTHER // or some default
+        )
+        JubilarType.ANNIVERSARY -> AnniversaryJubilar(
+            jubilarId = jubilarId,
+            lastName = lastName,
+            originalJubilarDate = originalJubilarDate,
+            address = address,
+            optOut = optOut,
+            comment = comment
+        )
+    }
+}
+
+fun Jubilar.toEntity(): JubilarEntity {
+    return when (this) {
+        is BirthdayJubilar -> JubilarEntity(
+            jubilarId = jubilarId,
+            type = JubilarType.BIRTHDAY,
+            lastName = lastName,
+            originalJubilarDate = originalJubilarDate,
+            address = address,
+            optOut = optOut,
+            comment = comment,
+            firstName = firstName,
+            gender = gender
+        )
+        is AnniversaryJubilar -> JubilarEntity(
+            jubilarId = jubilarId,
+            type = JubilarType.ANNIVERSARY,
+            lastName = lastName,
+            originalJubilarDate = originalJubilarDate,
+            address = address,
+            optOut = optOut,
+            comment = comment
+        )
+    }
+}
+
 data class JubilarWithInvites (
-    @Embedded val jubilar: Jubilar,
+    @Embedded val jubilar: JubilarEntity,
     @Relation(
         entity = StandchenInvite::class,
         parentColumn = "jubilarId",

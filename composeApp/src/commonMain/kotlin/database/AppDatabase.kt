@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import model.*
 
-@Database(entities = [Jubilar::class, AnniversaryJubilar::class, BirthdayJubilar::class, Standchen::class, StandchenInvite::class, Holiday::class], version = 16)
+@Database(entities = [JubilarEntity::class, Standchen::class, StandchenInvite::class, Holiday::class], version = 17)
 @TypeConverters(LocalDateConverter::class, UuidConverter::class)
 abstract class AppDatabase: RoomDatabase(), DB {
     abstract fun jubilarDao(): JubilarDao

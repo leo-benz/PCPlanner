@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.datetime.LocalDate
 import model.Jubilar
 import model.JubilarWithInvites
+import model.toDomain
+import model.toEntity
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -26,36 +28,25 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
 
     override fun insert(jubilar: Jubilar) {
         coroutineScope.launch {
-            if (jubilar is model.AnniversaryJubilar) {
-                database.jubilarDao().insert(jubilar)
-            } else if (jubilar is model.BirthdayJubilar) {
-                database.jubilarDao().insert(jubilar)
-            }
+            database.jubilarDao().insert(jubilar.toEntity())
         }
     }
 
     override fun getJubilare(): Flow<List<Jubilar>> {
-        return combine(
-            database.jubilarDao().getBirthdayAsFlow(),
-            database.jubilarDao().getAnniversaryAsFlow()
-        ) { birthday, anniversary ->
-            birthday + anniversary
-        }
+        return database.jubilarDao()
+            .getAllJubilare()               // Flow<List<JubilarEntity>>
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override fun getJubilare(date: LocalDate): Flow<List<Jubilar>> {
-        return combine(
-            database.jubilarDao().getBirthdayJubilare(date),
-            database.jubilarDao().getAnniversaryJubilare(date)
-        ) { birthday, anniversary ->
-            birthday + anniversary
-        }
+        return database.jubilarDao()
+            .getJubilare(date)               // Flow<List<JubilarEntity>>
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override fun deletaAll() {
         coroutineScope.launch {
-            database.jubilarDao().deleteBirthday()
-            database.jubilarDao().deleteAnniversary()
+            database.jubilarDao().deleteAll()
         }
     }
 

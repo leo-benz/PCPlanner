@@ -18,7 +18,7 @@ data class Standchen (
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Jubilar::class,
+            entity = JubilarEntity::class,
             parentColumns = ["jubilarId"],
             childColumns = ["jubilarId"],
             onDelete = ForeignKey.CASCADE
@@ -44,12 +44,24 @@ data class StanchenInviteWithStandchen (
     val standchen: Standchen
 )
 
-data class StandchenWithJubilare (
+data class StandchenWithJubilareEntity (
     @Embedded val standchen: Standchen,
     @Relation(
         parentColumn = "date",
         entityColumn = "jubilarId",
         associateBy = Junction(StandchenInvite::class)
     )
+    val jubilare: List<JubilarEntity>
+)
+
+data class StandchenWithJubilare(
+    val standchen: Standchen,
     val jubilare: List<Jubilar>
 )
+
+fun StandchenWithJubilareEntity.toDomain(): StandchenWithJubilare {
+    return StandchenWithJubilare(
+        standchen = standchen,
+        jubilare  = jubilare.map { it.toDomain() }
+    )
+}

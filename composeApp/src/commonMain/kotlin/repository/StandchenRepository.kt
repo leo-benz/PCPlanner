@@ -12,10 +12,7 @@ import kotlinx.datetime.LocalDate
 import model.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent.inject
 import org.openapitools.client.apis.HolidaysApi
-import org.openapitools.client.models.HolidayResponse
-import org.openapitools.client.models.HolidayType
 import kotlin.uuid.ExperimentalUuidApi
 
 interface StandchenRepository {
@@ -49,7 +46,7 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
     }
 
     override fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?> {
-        return database.standchenDao().getStandchenWithJubilare(date)
+        return database.standchenDao().getStandchenWithJubilare(date).map { it?.toDomain() }
     }
 
     override fun insert(standchen: List<Standchen>) {

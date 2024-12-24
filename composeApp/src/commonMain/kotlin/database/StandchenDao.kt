@@ -8,7 +8,7 @@ import kotlinx.datetime.LocalDate
 import model.Holiday
 import model.Standchen
 import model.StandchenInvite
-import model.StandchenWithJubilare
+import model.StandchenWithJubilareEntity
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -32,7 +32,7 @@ interface StandchenDao {
 //
     @Transaction
     @Query("SELECT * FROM Standchen WHERE date = :date")
-    fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?>
+    fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilareEntity?>
 
     @Query("""SELECT s.* FROM Standchen s
             INNER JOIN StandchenInvite si ON s.date = si.date
