@@ -18,6 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.LocalDate
+import model.AnniversaryJubilar
+import model.BirthdayJubilar
 import model.Jubilar
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -89,13 +92,22 @@ fun JubilarRow(jubilar: Jubilar) {
         modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(text = "${jubilar.firstName} ${jubilar.lastName}", modifier = Modifier.weight(1f))
-        Text(text = "${jubilar.birthdate}", modifier = Modifier.weight(1f))
-        Text(text = "${jubilar.gender}", modifier = Modifier.weight(1f))
-        Text(text = "${jubilar.address}", modifier = Modifier.weight(1f))
+        if (jubilar is BirthdayJubilar) {
+            Text(text = "${jubilar.firstName} ${jubilar.lastName}", modifier = Modifier.weight(1f))
+            Text(text = "${jubilar.gender}", modifier = Modifier.weight(1f))
+        } else {
+            Text(text = "Ehepaar ${jubilar.lastName}", modifier = Modifier.weight(1f))
+            Text(text = "", modifier = Modifier.weight(1f))
+        }
+        Text(text = "${jubilar.originalJubilarDate}", modifier = Modifier.weight(1f))
+        Text(text = jubilar.address, modifier = Modifier.weight(1f))
         Text(text = "${jubilar.optOut}", modifier = Modifier.weight(1f))
-        Text(text = "${jubilar.comment}", modifier = Modifier.weight(1f))
-        Text(text = "${jubilar.marriageAnniversary}", modifier = Modifier.weight(1f))
+        Text(text = jubilar.comment, modifier = Modifier.weight(1f))
+        if (jubilar is AnniversaryJubilar) {
+            Text(text = "${jubilar.marriageAnniversary()}", modifier = Modifier.weight(1f))
+        } else {
+            Text(text = "", modifier = Modifier.weight(1f))
+        }
     }
 
 }

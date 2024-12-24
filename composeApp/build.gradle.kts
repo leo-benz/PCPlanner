@@ -2,6 +2,7 @@ import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -12,6 +13,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
+
 
 kotlin {
     androidTarget {
@@ -174,5 +176,13 @@ room {
 tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
     if (name != "kspCommonMainKotlinMetadata" ) {
         dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.uuid.ExperimentalUuidApi",
+        )
     }
 }

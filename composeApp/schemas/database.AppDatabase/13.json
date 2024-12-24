@@ -1,17 +1,17 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 12,
-    "identityHash": "b710cf3c70c3715fe095e1f0f8b15f00",
+    "version": 13,
+    "identityHash": "be77a19bd1bf295f1d9215229535d168",
     "entities": [
       {
         "tableName": "Jubilar",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`jubilarId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`jubilarId` TEXT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL, PRIMARY KEY(`jubilarId`))",
         "fields": [
           {
             "fieldPath": "jubilarId",
             "columnName": "jubilarId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -46,7 +46,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
             "jubilarId"
           ]
@@ -54,12 +54,12 @@
       },
       {
         "tableName": "AnniversaryJubilar",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`jubilarId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`jubilarId` TEXT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL, PRIMARY KEY(`jubilarId`))",
         "fields": [
           {
             "fieldPath": "jubilarId",
             "columnName": "jubilarId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -94,7 +94,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
             "jubilarId"
           ]
@@ -102,7 +102,7 @@
       },
       {
         "tableName": "BirthdayJubilar",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstName` TEXT NOT NULL, `gender` TEXT NOT NULL, `jubilarId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`firstName` TEXT NOT NULL, `gender` TEXT NOT NULL, `jubilarId` TEXT NOT NULL, `lastName` TEXT NOT NULL, `originalJubilarDate` TEXT NOT NULL, `address` TEXT NOT NULL, `optOut` INTEGER NOT NULL, `comment` TEXT NOT NULL, PRIMARY KEY(`jubilarId`))",
         "fields": [
           {
             "fieldPath": "firstName",
@@ -119,7 +119,7 @@
           {
             "fieldPath": "jubilarId",
             "columnName": "jubilarId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -154,7 +154,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
             "jubilarId"
           ]
@@ -180,7 +180,7 @@
       },
       {
         "tableName": "StandchenInvite",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `accepted` INTEGER NOT NULL, `date` TEXT NOT NULL, `jubilarId` INTEGER NOT NULL, `year` INTEGER NOT NULL, FOREIGN KEY(`date`) REFERENCES `Standchen`(`date`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`jubilarId`) REFERENCES `Jubilar`(`jubilarId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `accepted` INTEGER NOT NULL, `date` TEXT NOT NULL, `jubilarId` TEXT NOT NULL, `year` INTEGER NOT NULL, FOREIGN KEY(`date`) REFERENCES `Standchen`(`date`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`jubilarId`) REFERENCES `Jubilar`(`jubilarId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -203,7 +203,7 @@
           {
             "fieldPath": "jubilarId",
             "columnName": "jubilarId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -259,7 +259,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b710cf3c70c3715fe095e1f0f8b15f00')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'be77a19bd1bf295f1d9215229535d168')"
     ]
   }
 }

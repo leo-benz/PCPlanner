@@ -1,22 +1,22 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package repository
 
 import database.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
-import model.Jubilar
-import model.Standchen
-import model.StandchenInvite
-import model.StandchenWithJubilare
+import model.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.inject
 import org.openapitools.client.apis.HolidaysApi
 import org.openapitools.client.models.HolidayResponse
 import org.openapitools.client.models.HolidayType
+import kotlin.uuid.ExperimentalUuidApi
 
 interface StandchenRepository {
     fun getStandchen(year: Int): Flow<List<Standchen>>
@@ -25,9 +25,10 @@ interface StandchenRepository {
     fun insert(standchen: List<Standchen>)
     suspend fun insert(standchen: Standchen)
     suspend fun remove(standchen: Standchen)
-    suspend fun getSummerHoliday(year: Int): HolidayResponse?
+    fun getSummerHoliday(year: Int): Flow<Holiday?>
     fun insert(invite: StandchenInvite)
     fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
+    fun insert(holiday: Holiday)
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -67,26 +68,53 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         }
     }
 
+    override fun insert(holiday: Holiday) {
+        coroutineScope.launch {
+            database.standchenDao().insert(holiday)
+        }
+    }
+
     override suspend fun remove(standchen: Standchen) {
         database.standchenDao().delete(standchen)
     }
 
-    override suspend fun getSummerHoliday(year: Int): HolidayResponse? {
-        val holidaysApi = HolidaysApi("https://openholidaysapi.org/")
+    @Throws(SummerHolidayFetchException::class)
+    override fun getSummerHoliday(year: Int): Flow<Holiday?> = flow {
+        val holidayFlow = database.standchenDao().getSummerHoliday(year).onStart { println("Repo Flow started for year = $year") }
+            .onEach { holiday -> println("Repo Flow emitted holiday = $holiday") }
+            .onCompletion { cause -> println("Repo Flow completed. Cause: $cause") }
 
-        val holidays = withContext(Dispatchers.IO) {
-            holidaysApi.schoolHolidaysGet(
-                "DE",
-                LocalDate(year, 1, 1),
-                LocalDate(year, 12, 31),
-                "DE",
-                "DE-BW"
-            )
-        }
-        return holidays.body().firstOrNull {
-            it.name.map { it.text }.contains("Sommerferien")
+        emitAll(holidayFlow)
+
+        val storedHoliday = database.standchenDao().getSummerHoliday(year).firstOrNull()
+
+        if (storedHoliday == null) {
+            val holidaysApi = HolidaysApi("https://openholidaysapi.org/")
+
+            val holidays = withContext(Dispatchers.IO) {
+                holidaysApi.schoolHolidaysGet(
+                    "DE",
+                    LocalDate(year, 1, 1),
+                    LocalDate(year, 12, 31),
+                    "DE",
+                    "DE-BW"
+                )
+            }
+            try {
+                val holidayResponse = holidays.body().first() { response ->
+                    response.name.map { it.text }.contains("Sommerferien")
+                }
+                database.standchenDao().insert(Holiday(holidayResponse.startDate, holidayResponse.endDate))
+            } catch (e: NoSuchElementException) {
+                throw SummerHolidayNotFoundException("No summer holiday found for $year", e)
+            } catch (e: Exception) {
+                throw SummerHolidayFetchException("Error decoding holiday API response", e)
+            }
         }
     }
 }
+
+class SummerHolidayFetchException(message: String, cause: Throwable? = null) : Exception(message, cause)
+class SummerHolidayNotFoundException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 

@@ -2,6 +2,7 @@ package model
 
 import androidx.room.*
 import kotlinx.datetime.LocalDate
+import kotlin.uuid.Uuid
 
 @Entity
 data class Standchen (
@@ -30,7 +31,7 @@ data class StandchenInvite (
     @PrimaryKey(autoGenerate = true) val id: Int,
     val accepted: Boolean,
     val date: LocalDate,
-    val jubilarId: Int,
+    val jubilarId: Uuid,
     val year: Int = date.year
 )
 

@@ -1,13 +1,15 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package viewmodel
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
-import model.Gender
-import model.Jubilar
-import model.MarriageAnniversary
+import model.*
 import repository.JubilareRepository
 import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class JubilareViewModel(
     private val repository: JubilareRepository
@@ -29,7 +31,7 @@ class JubilareViewModel(
         val firstNames = listOf("John", "Jane", "Alex", "Emily", "Chris")
         val lastNames = listOf("Doe", "Smith", "Johnson", "Williams", "Brown")
         val genders = Gender.values()
-        val anniversaries = MarriageAnniversary.values()
+        val classes = listOf(BirthdayJubilar::class, AnniversaryJubilar::class)
 
         val firstName = firstNames.random()
         val lastName = lastNames.random()
@@ -38,20 +40,35 @@ class JubilareViewModel(
         val address = "Random Address ${Random.nextInt(1000)}"
         val optOut = Random.nextBoolean()
         val comment = "Random Comment ${Random.nextInt(1000)}"
-        val marriageAnniversary = anniversaries.random()
 
-
-        return Jubilar(
-            jubilarId = 0,
-            firstName = firstName,
-            lastName = lastName,
-            birthdate = birthdate,
-            gender = gender,
-            address = address,
-            optOut = optOut,
-            comment = comment,
-            marriageAnniversary = marriageAnniversary
-        )
+        val clazz = classes.random()
+        when (clazz) {
+            BirthdayJubilar::class -> {
+                return BirthdayJubilar(
+                    jubilarId = Uuid.random(),
+                    firstName = firstName,
+                    lastName = lastName,
+                    originalJubilarDate = birthdate,
+                    gender = gender,
+                    address = address,
+                    optOut = optOut,
+                    comment = comment,
+                )
+            }
+            AnniversaryJubilar::class -> {
+                return AnniversaryJubilar(
+                    jubilarId = Uuid.random(),
+                    lastName = lastName,
+                    originalJubilarDate = birthdate,
+                    address = address,
+                    optOut = optOut,
+                    comment = comment,
+                )
+            }
+            else -> {
+                throw IllegalArgumentException("Unknown jubilar class")
+            }
+        }
     }
 
     fun deleteAllJubilare() {

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package viewmodel
 
 import androidx.compose.runtime.MutableState
@@ -13,25 +15,13 @@ import model.*
 import org.docx4j.XmlUtils
 import org.docx4j.model.datastorage.migration.VariablePrepare
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage
-import org.docx4j.openpackaging.parts.CustomXmlPart
-import org.docx4j.openpackaging.parts.DocPropsCorePart
-import org.docx4j.openpackaging.parts.DocPropsExtendedPart
-import org.docx4j.openpackaging.parts.PartName
-import org.docx4j.openpackaging.parts.ThemePart
-import org.docx4j.openpackaging.parts.WordprocessingML.BibliographyPart
-import org.docx4j.openpackaging.parts.WordprocessingML.BinaryPartAbstractImage
-import org.docx4j.openpackaging.parts.WordprocessingML.DocumentSettingsPart
-import org.docx4j.openpackaging.parts.WordprocessingML.EndnotesPart
-import org.docx4j.openpackaging.parts.WordprocessingML.FontTablePart
-import org.docx4j.openpackaging.parts.WordprocessingML.HeaderPart
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart
-import org.docx4j.openpackaging.parts.WordprocessingML.StyleDefinitionsPart
-import org.docx4j.wml.STBrType
-import org.openapitools.client.models.HolidayResponse
 import repository.JubilareRepository
 import repository.StandchenRepository
+import repository.SummerHolidayFetchException
 import java.io.File
 import java.time.DayOfWeek
+import kotlin.uuid.ExperimentalUuidApi
 
 class PlanningViewModel(
     private val standchenRepository: StandchenRepository,
@@ -46,9 +36,16 @@ class PlanningViewModel(
         standchenRepository.getStandchen(year).map { it.isNotEmpty() }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
-    private var cachedHoliday: SharedFlow<HolidayResponse> = year.mapNotNull { year ->
-        standchenRepository.getSummerHoliday(year)
-    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(), replay = 1)
+    val errorMessage = MutableStateFlow<String?>(null)
+
+    var holiday: StateFlow<Holiday?> = year.flatMapLatest { year ->
+        standchenRepository.getSummerHoliday(year).onStart { println("Flow started for year = $year") }
+            .onEach { holiday -> println("Flow emitted holiday = $holiday") }
+            .onCompletion { cause -> println("Flow completed. Cause: $cause") }
+    }.catch { e ->
+        println("Flow caught error: $e")
+        errorMessage.value = "Error fetching summer holiday, please configure holidays manually!\n${e.message}"
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
     fun updateYear(newYear: Int) {
         year.value = newYear
@@ -58,7 +55,7 @@ class PlanningViewModel(
         // Create a standchen for every second sunday starting from the first sunday in the year
         // Skip the second sunday in a month
         viewModelScope.launch {
-            cachedHoliday.first().let { holiday ->
+            holiday.first().let { holiday ->
                 val standchenList = mutableListOf<Standchen>()
                 val firstSunday = getFirstSunday(year.value, 1)
                 var day = firstSunday
@@ -66,7 +63,7 @@ class PlanningViewModel(
                 var sundayCount = 1
                 var skipWeek = false
                 while (day.year == year.value) {
-                    if (day in holiday.startDate..holiday.endDate) {
+                    if (holiday != null && day in holiday.startDate..holiday.endDate) {
                         skipWeek = true
                     }
                     if (sundayCount == 2) {
@@ -93,17 +90,20 @@ class PlanningViewModel(
             val standchenList = standchenRepository.getStandchen(year.value).first()
             var jubilare = jubilareRepository.getJubilare().first()
             jubilare = jubilare.filter {
-                val age = year.value - it.birthdate.year
-                var eligible = age == 80 || age >= 85 || it.marriageAnniversary != MarriageAnniversary.NONE
+                val age = year.value - it.originalJubilarDate.year
+                var eligible = age == 80 || age >= 85
+                if (it is AnniversaryJubilar) {
+                    eligible = eligible || it.marriageAnniversary(year.value) != MarriageAnniversary.NONE
+                }
 
                 eligible = true // FIXME: Remove this line to enable the age check
 
                 return@filter eligible
             }
-            jubilare = jubilare.sortedBy { LocalDate(year.value, it.birthdate.monthNumber, it.birthdate.dayOfMonth) }
+            jubilare = jubilare.sortedBy { LocalDate(year.value, it.originalJubilarDate.monthNumber, it.originalJubilarDate.dayOfMonth) }
             var currentStandchen = standchenList.first()
             for (ju in jubilare) {
-                val currentBirthday = LocalDate(year.value, ju.birthdate.monthNumber, ju.birthdate.dayOfMonth)
+                val currentBirthday = LocalDate(year.value, ju.originalJubilarDate.monthNumber, ju.originalJubilarDate.dayOfMonth)
                 if (currentStandchen.date < currentBirthday) {
                     currentStandchen = standchenList.first { it.date > currentBirthday }
                 }
@@ -126,8 +126,8 @@ class PlanningViewModel(
     }
 
     fun isHoliday(day: LocalDate): Flow<Boolean> {
-        return cachedHoliday.map { holiday ->
-            day in holiday.startDate..holiday.endDate
+        return holiday.map { holiday ->
+            holiday != null && day in holiday.startDate..holiday.endDate
         }
     }
 
@@ -139,7 +139,7 @@ class PlanningViewModel(
 
     fun isJubilarDay(day: LocalDate): Flow<Boolean> {
         return jubilareRepository.getJubilare().map { jubilareList ->
-            jubilareList.any { it.birthdate.monthNumber == day.monthNumber && it.birthdate.dayOfMonth == day.dayOfMonth }
+            jubilareList.any { it.originalJubilarDate.monthNumber == day.monthNumber && it.originalJubilarDate.dayOfMonth == day.dayOfMonth }
         }
     }
 
@@ -147,7 +147,7 @@ class PlanningViewModel(
         viewModelScope.launch {
             println("Day selected: $day")
             println("Standchen: ${standchenRepository.getStandchenWithJubilare(day).first()}")
-            println("Jubilare: ${jubilareRepository.getJubilareWithInvites(day).first()}")
+//            println("Jubilare: ${jubilareRepository.getJubilareWithInvites(day).first()}")
 
             dateDetails.value = day;
         }
@@ -192,7 +192,7 @@ class PlanningViewModel(
                 val standchen = standchenRepository.getStandchen(jubilar, year).first()
                 val letterDate = getCurrentLocalDate()
                 val placeholders = mapOf(
-                    "firstName" to if (jubilar.gender == Gender.OTHER) "Ehepaar" else jubilar.firstName,
+                    "firstName" to if (jubilar is BirthdayJubilar) jubilar.firstName else "Ehepaar",
                     "lastName" to jubilar.lastName,
                     "address" to jubilar.address,
                     "letterDate" to letterDate.format(LocalDate.Format {
@@ -201,17 +201,25 @@ class PlanningViewModel(
                     ); year()
                     }),
                     "greeting" to "Sehr geehrte${
-                        when (jubilar.gender) {
-                            Gender.MALE -> "r Herr"; Gender.FEMALE -> " Frau"; Gender.OTHER -> "es Ehepaar"; }
+                        if (jubilar is BirthdayJubilar) {
+                            when (jubilar.gender) {
+                                Gender.MALE -> "r Herr"; Gender.FEMALE -> " Frau"; else -> "s "
+                            }
+                        } else {
+                            "s Ehepaar"
+                        }
                     }",
-                    "eventPronoun" to if (jubilar.marriageAnniversary != MarriageAnniversary.NONE) "Ihrer" else "Ihrem",
-                    "eventDescription" to when (jubilar.marriageAnniversary) {
-                        MarriageAnniversary.NONE -> "${year - jubilar.birthdate.year}. Geburtstag"
-                        MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
-                        MarriageAnniversary.IRON -> "Eiserne Hochzeit"
-                        MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
-                        MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
-                        else -> "Geburtstag"
+                    "eventPronoun" to if (jubilar is AnniversaryJubilar) "Ihrer" else "Ihrem",
+                    "eventDescription" to if (jubilar is AnniversaryJubilar) {
+                        when (jubilar.marriageAnniversary()) {
+                            MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
+                            MarriageAnniversary.IRON -> "Eiserne Hochzeit"
+                            MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
+                            MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
+                            else -> "Hochzeit"
+                        }
+                    } else {
+                        "${year - jubilar.originalJubilarDate.year}. Geburtstag"
                     },
                     "standchenDate" to standchen.date.format(LocalDate.Format {
                         dayOfMonth(); char('.'); monthNumber(); char(
@@ -232,6 +240,12 @@ class PlanningViewModel(
             // Save the new document
             wordMLPackage.save(File("/Users/leobenz/Downloads/Anschreiben_Jubilare_combined.docx"))
             println("printed!!!")
+        }
+    }
+
+    fun configureSummerHolidays(start: LocalDate, end: LocalDate) {
+        viewModelScope.launch {
+            standchenRepository.insert(Holiday(start, end))
         }
     }
 

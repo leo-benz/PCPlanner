@@ -18,6 +18,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
+import model.AnniversaryJubilar
+import model.BirthdayJubilar
 import model.GERMAN_FULL
 import org.koin.compose.viewmodel.koinViewModel
 import viewmodel.PlanningViewModel
@@ -66,7 +68,14 @@ fun DateDetails(modifier: Modifier = Modifier) {
                 if (jubilare.isNotEmpty()) {
                     Text("${jubilare.size} Jubilar${if (jubilare.size == 1) "" else "e"}:", style = MaterialTheme.typography.bodyMedium)
                     jubilare.forEach {
-                        Text("${it.firstName} ${it.lastName}", style = MaterialTheme.typography.bodySmall)
+                        when (it) {
+                            is BirthdayJubilar -> {
+                                Text("${it.firstName} ${it.lastName}", style = MaterialTheme.typography.bodySmall)
+                            }
+                            is AnniversaryJubilar -> {
+                                Text("Ehepaar ${it.lastName}", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                 }
 

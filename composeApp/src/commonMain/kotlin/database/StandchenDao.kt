@@ -1,11 +1,16 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
+import model.Holiday
 import model.Standchen
 import model.StandchenInvite
 import model.StandchenWithJubilare
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Dao
 interface StandchenDao {
@@ -32,7 +37,7 @@ interface StandchenDao {
     @Query("""SELECT s.* FROM Standchen s
             INNER JOIN StandchenInvite si ON s.date = si.date
             WHERE si.jubilarId = :jubilarId AND strftime('%Y', s.date) = CAST(:year AS TEXT)""")
-    fun getStandchen(jubilarId: Int, year: Int): Flow<Standchen>
+    fun getStandchen(jubilarId: Uuid, year: Int): Flow<Standchen>
 
     @Transaction
     @Query("SELECT * FROM Standchen WHERE date = :date")
@@ -40,4 +45,10 @@ interface StandchenDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(invite: StandchenInvite)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(holiday: Holiday)
+
+    @Query("SELECT * FROM Holiday WHERE year = :year LIMIT 1")
+    fun getSummerHoliday(year: Int): Flow<Holiday?>
 }
