@@ -1,5 +1,6 @@
 package ui
 
+import ImportScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.*
@@ -16,7 +17,6 @@ import io.github.vinceglb.filekit.core.PickerType
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import viewmodel.ImportViewModel
-import viewmodel.JubilareViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
@@ -49,6 +49,8 @@ fun JubilareImport(navigateBack: () -> Unit = {}) {
             Button(onClick = { launcher.launch() }) {
                 Text("Bild auswählen")
             }
+
+            ImportScreen(viewModel.file, viewModel.jubilareState, viewModel::updateJubilar)
         }
     }
 }

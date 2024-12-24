@@ -113,7 +113,7 @@ class PlanningViewModel(
     }
 
     private fun invite(jubilar: Jubilar, standchen: Standchen) {
-        var invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId)
+        var invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId!!)
         standchenRepository.insert(invite)
     }
 

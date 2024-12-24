@@ -1,9 +1,13 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import model.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Dao
 interface JubilarDao {
@@ -68,4 +72,7 @@ interface JubilarDao {
 //    @Transaction
 //    @Query("SELECT * FROM Jubilar WHERE strftime('%m-%d', originalJubilarDate) = strftime('%m-%d', :date)")
 //    fun getJubilareWithInvites(date: LocalDate): Flow<List<JubilarWithInvites>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM JubilarEntity WHERE jubilarId = :uuid)")
+    fun exists(uuid: Uuid): Flow<Boolean>
 }

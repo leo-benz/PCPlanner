@@ -42,7 +42,7 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
     }
 
     override fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen> {
-        return database.standchenDao().getStandchen(jubilar.jubilarId, year)
+        return database.standchenDao().getStandchen(jubilar.jubilarId!!, year)
     }
 
     override fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?> {

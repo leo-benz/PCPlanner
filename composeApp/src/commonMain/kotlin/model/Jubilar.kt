@@ -7,12 +7,15 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Serializable
 @Entity
 data class JubilarEntity(
-    @PrimaryKey val jubilarId: Uuid = Uuid.random(),
+    @Contextual @PrimaryKey val jubilarId: Uuid = Uuid.random(),
     val type: JubilarType,              // Distinguish BIRTHDAY vs. ANNIVERSARY
     val lastName: String,
     val originalJubilarDate: LocalDate,
@@ -41,23 +44,23 @@ sealed class Jubilar {
 }
 
 data class BirthdayJubilar(
-    override val jubilarId: Uuid,
+    @Contextual override val jubilarId: Uuid = Uuid.random(),
     override val lastName: String,
     override val originalJubilarDate: LocalDate,
     override val address: String,
-    override val optOut: Boolean,
-    override val comment: String,
+    override val optOut: Boolean = false,
+    override val comment: String = "",
     val firstName: String,
     val gender: Gender
 ) : Jubilar()
 
 data class AnniversaryJubilar(
-    override val jubilarId: Uuid,
+    @Contextual override val jubilarId: Uuid = Uuid.random(),
     override val lastName: String,
     override val originalJubilarDate: LocalDate,
     override val address: String,
-    override val optOut: Boolean,
-    override val comment: String
+    override val optOut: Boolean = false,
+    override val comment: String = ""
 ) : Jubilar() {
     fun marriageAnniversary(year: Int  = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year): MarriageAnniversary {
         val years = year - originalJubilarDate.year

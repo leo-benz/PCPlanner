@@ -10,6 +10,8 @@ import model.toDomain
 import model.toEntity
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 interface JubilareRepository {
     fun greet(): String
@@ -17,6 +19,7 @@ interface JubilareRepository {
     fun getJubilare(): Flow<List<Jubilar>>
     fun getJubilare(date: LocalDate): Flow<List<Jubilar>>
     fun deletaAll()
+    fun exists(jubilarId: Uuid): Flow<Boolean>
 //    fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>>
 }
 
@@ -48,6 +51,11 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
         coroutineScope.launch {
             database.jubilarDao().deleteAll()
         }
+    }
+
+    @ExperimentalUuidApi
+    override fun exists(jubilarId: Uuid): Flow<Boolean> {
+        return database.jubilarDao().exists(jubilarId)
     }
 
 //    override fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>> {

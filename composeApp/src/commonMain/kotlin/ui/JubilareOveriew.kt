@@ -77,8 +77,8 @@ fun JubilarTableHeader() {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(text = "Name", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
-        Text(text = "Geburtstag", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
         Text(text = "Geschlecht", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
+        Text(text = "Geburtstag", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
         Text(text = "Adresse", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
         Text(text = "Opt Out", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
         Text(text = "Kommentar", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
