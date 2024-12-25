@@ -13,7 +13,9 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
-@Entity
+@Entity(indices = [
+    Index(value = ["type", "lastName", "firstName", "originalJubilarDate", "gender"], unique = true),
+])
 data class JubilarEntity(
     @Contextual @PrimaryKey val jubilarId: Uuid = Uuid.random(),
     val type: JubilarType,              // Distinguish BIRTHDAY vs. ANNIVERSARY
@@ -34,6 +36,7 @@ enum class JubilarType {
     ANNIVERSARY
 }
 
+@Serializable
 sealed class Jubilar {
     abstract val jubilarId: Uuid
     abstract val lastName: String

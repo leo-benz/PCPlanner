@@ -1,5 +1,6 @@
 package di
 
+import model.JubilareListDeserializer
 import repository.JubilareRepository
 import repository.JubilareRepositoryImpl
 import viewmodel.JubilareViewModel

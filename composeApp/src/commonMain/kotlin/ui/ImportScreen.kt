@@ -22,6 +22,7 @@ import kotlinx.datetime.format.char
 import model.*
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
+import ui.JubilarEdit
 import viewmodel.ImportViewModel
 import java.io.File
 import javax.imageio.ImageIO
@@ -39,9 +40,6 @@ fun ImportScreen(
     val jubilareList by jubilareState.collectAsState()
     var currentIndex by remember { mutableStateOf(0) }
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-
-    var genderDropDownExpanded by remember { mutableStateOf(false) } // To manage dropdown visibility
-    val genders = Gender.entries.toTypedArray() // List of genders to display
 
     // Load the image bitmap from the file
     LaunchedEffect(Unit) {
@@ -99,124 +97,7 @@ fun ImportScreen(
             ) {
                 if (jubilareList.isNotEmpty()) {
                     val jubilar = jubilareList[currentIndex]
-                    var lastName by remember(jubilar) { mutableStateOf(jubilar.lastName) }
-                    var gender by remember(jubilar) {
-                        if (jubilar is BirthdayJubilar) mutableStateOf(jubilar.gender) else mutableStateOf(
-                            Gender.OTHER)
-                    }
-                    var firstName by remember(jubilar) {
-                        if (jubilar is BirthdayJubilar) mutableStateOf(jubilar.firstName) else mutableStateOf(
-                            ""
-                        )
-                    }
-                    val dateFormat = LocalDate.Format {
-                        dayOfMonth(Padding.ZERO);char('.');monthNumber(Padding.ZERO);char('.');year()
-                    }
-                    var originalJubilarDate by remember(jubilar) { mutableStateOf(jubilar.originalJubilarDate.format(dateFormat)) }
-                    var address by remember(jubilar) { mutableStateOf(jubilar.address) }
-
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        if (jubilar is BirthdayJubilar) {
-                            TextField(
-                                value = firstName,
-                                onValueChange = {
-                                    firstName = it
-                                    onJubilarUpdate(
-                                        currentIndex,
-                                        jubilar.toEntity().copy(firstName = firstName).toDomain()
-                                    )
-                                },
-                                label = { Text("First Name") },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        TextField(
-                            value = lastName,
-                            onValueChange = {
-                                lastName = it
-                                onJubilarUpdate(
-                                    currentIndex,
-                                    jubilar.toEntity().copy(lastName = lastName).toDomain()
-                                )
-                            },
-                            label = { Text("Last Name") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        TextField(
-                            value = originalJubilarDate,
-                            onValueChange = {
-                                originalJubilarDate = it
-                                // Validate and update the date
-                                onJubilarUpdate(
-                                    currentIndex,
-                                    jubilar.toEntity().copy(originalJubilarDate = kotlin.runCatching {
-                                        LocalDate.parse(it, dateFormat)
-                                    }.getOrDefault(jubilar.originalJubilarDate)).toDomain()
-                                )
-                            },
-                            label = { Text(if (jubilar is BirthdayJubilar) "Birthdate" else "Hochzeitstag") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (jubilar is BirthdayJubilar) {
-                            ExposedDropdownMenuBox(
-                                expanded = genderDropDownExpanded,
-                                onExpandedChange = { genderDropDownExpanded = it},
-                                modifier = Modifier.fillMaxWidth())
-                            {
-
-                                TextField(
-                                    value = gender.name, // Display the current gender
-                                    onValueChange = {}, // TextField is read-only; changes happen through dropdown
-                                    label = { Text("Gender") },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderDropDownExpanded) },
-                                    readOnly = true, // Prevent manual editing
-                                )
-
-                                ExposedDropdownMenu(
-                                    expanded = genderDropDownExpanded,
-                                    onDismissRequest = { genderDropDownExpanded = false } // Close dropdown when clicked outside
-                                ) {
-                                    genders.forEach { genderOption ->
-                                        DropdownMenuItem(
-                                            text = { Text(genderOption.name) },
-                                            onClick = {
-                                                gender = genderOption
-                                                genderDropDownExpanded = false // Close dropdown after selection
-                                                onJubilarUpdate(
-                                                    currentIndex,
-                                                    jubilar.toEntity().copy(gender = genderOption).toDomain()
-                                                )
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        TextField(
-                            value = address,
-                            onValueChange = {
-                                address = it
-                                onJubilarUpdate(
-                                    currentIndex,
-                                    jubilar.toEntity().copy(address = address).toDomain()
-                                )
-                            },
-                            label = { Text("Address") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    JubilarEdit(jubilar) { onJubilarUpdate(currentIndex, it) }
                 } else {
                     Text(
                         "No Jubilars Available",
@@ -275,6 +156,7 @@ fun ImportScreen(
                 Button(
                     onClick = {
                         viewModel.delete(currentIndex)
+                        if (currentIndex == jubilareList.size - 1) currentIndex -= 1
                     },
                     enabled = jubilareList.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)

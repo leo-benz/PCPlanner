@@ -42,12 +42,16 @@ fun JubilareOverview(navigateBack: () -> Unit = {}) {
         Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(onClick = { viewModel.insertRandomJubilar() }) {
-                    Text("New Jubilar")
+                    Text("Neuer Geburtstag")
                 }
 
-                Button(onClick = { viewModel.deleteAllJubilare() }) {
-                    Text("Delete All")
+                Button(onClick = { viewModel.insertRandomJubilar() }) {
+                    Text("Neuer Hochzeitstag")
                 }
+
+//                Button(onClick = { viewModel.deleteAllJubilare() }) {
+//                    Text("Alle Löschen")
+//                }
             }
             val jubilare by viewModel.getJubilare().collectAsState(initial = emptyList())
             JubilarTable(jubilare)

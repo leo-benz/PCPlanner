@@ -75,4 +75,13 @@ interface JubilarDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM JubilarEntity WHERE jubilarId = :uuid)")
     fun exists(uuid: Uuid): Flow<Boolean>
+
+    @Query("SELECT * FROM JubilarEntity WHERE lastName = :lastName AND originalJubilarDate = :originalJubilarDate AND firstName = :firstName AND gender = :gender AND type = :type LIMIT 1")
+    fun getJubilarByData(
+        lastName: String,
+        originalJubilarDate: LocalDate,
+        firstName: String?,
+        gender: Gender?,
+        type: JubilarType
+    ): Flow<JubilarEntity?>
 }

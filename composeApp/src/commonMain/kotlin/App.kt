@@ -74,7 +74,7 @@ fun HomeScreen(navController: NavController) {
                 Text("Planung")
             }
             Button(onClick = { navController.navigate("import") }) {
-                Text("Import")
+                Text("Geburtstage Importieren")
             }
         }
     }

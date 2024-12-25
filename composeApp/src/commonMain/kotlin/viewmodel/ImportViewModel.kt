@@ -104,7 +104,18 @@ class ImportViewModel(
             }
 
             val jubilareList: JubilareWrapper = Json.decodeFromString(file.readText())
-            _jubilareState.update { jubilareList.jubilare }
+
+            _jubilareState.update {
+                jubilareList.jubilare.map {
+                    val storedJubilarFlow = repository.getStoredJubilar(it)
+                    val storedJubilar = storedJubilarFlow.first()
+                    if (storedJubilar != null) {
+                        storedJubilar
+                    } else {
+                        it
+                    }
+                }
+            }
             _file.update { imagePath.file }
         }
     }

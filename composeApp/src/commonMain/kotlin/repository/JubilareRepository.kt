@@ -20,6 +20,7 @@ interface JubilareRepository {
     fun getJubilare(date: LocalDate): Flow<List<Jubilar>>
     fun deletaAll()
     fun exists(jubilarId: Uuid): Flow<Boolean>
+    fun getStoredJubilar(it: Jubilar): Flow<Jubilar?>
 //    fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>>
 }
 
@@ -56,6 +57,11 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
     @ExperimentalUuidApi
     override fun exists(jubilarId: Uuid): Flow<Boolean> {
         return database.jubilarDao().exists(jubilarId)
+    }
+
+    override fun getStoredJubilar(it: Jubilar): Flow<Jubilar?> {
+        val entity = it.toEntity()
+        return database.jubilarDao().getJubilarByData(entity.lastName, entity.originalJubilarDate, entity.firstName, entity.gender, entity.type).map { it?.toDomain() }
     }
 
 //    override fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>> {
