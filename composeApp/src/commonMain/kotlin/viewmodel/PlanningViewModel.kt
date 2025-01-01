@@ -96,7 +96,7 @@ class PlanningViewModel(
                     eligible = eligible || it.marriageAnniversary(year.value) != MarriageAnniversary.NONE
                 }
 
-                eligible = true // FIXME: Remove this line to enable the age check
+                // eligible = true // FIXME: Remove this line to enable the age check
 
                 return@filter eligible
             }
