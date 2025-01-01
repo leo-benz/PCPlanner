@@ -22,6 +22,7 @@ import model.*
 import repository.JubilareRepository
 import java.io.File
 import java.net.URLConnection
+import java.security.MessageDigest
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -42,10 +43,37 @@ class ImportViewModel(
         timeout = Timeout(socket = 60.seconds),
     )
 
+    private fun getAppDataDirectory(): File {
+        val appName = "PCPlanner"
+        val os = System.getProperty("os.name").lowercase()
+
+        return when {
+            "win" in os ->
+                // %APPDATA%\AppName
+                File(System.getenv("APPDATA") ?: System.getProperty("user.home"), appName)
+            "mac" in os ->
+                // ~/Library/Application Support/AppName
+                File(System.getProperty("user.home"), "Library/Application Support/$appName")
+            else ->
+                // ~/.appname (or use XDG environment vars if you prefer)
+                File(System.getProperty("user.home"), ".$appName")
+        }
+    }
+
+    fun ByteArray.sha256Hex(): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(this)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
     fun import(imagePath: PlatformFile) {
-        println("Importing image from ${imagePath.path}")
-        val file = File(imagePath.file.name + ".json")
         viewModelScope.launch {
+            println("Importing image from ${imagePath.path}")
+            val cacheDir = File(getAppDataDirectory(), "cache/").apply { mkdirs() }
+
+            val fileBytes = imagePath.readBytes()
+            val hashValue = fileBytes.sha256Hex()
+            val file = File(cacheDir, "$hashValue.json")
+
             if (!file.exists()) {
                 val chatCompletionRequest = ChatCompletionRequest(
                     model = ModelId("gpt-4o-mini"),

@@ -179,10 +179,11 @@ class PlanningViewModel(
 
     // TODO: Use different template for standchen after sommerferien
 
-    fun print(jubilare: List<Jubilar>, year: Int) {
+    fun print(jubilare: List<Jubilar>, year: Int, file: File) {
         viewModelScope.launch {
-
-            val wordMLPackage = WordprocessingMLPackage.load(File("/Users/leobenz/Developer/Private/PCPlanner/composeApp/template/Anschreiben_Jubilare.docx"))
+            val docxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare.docx")
+                ?: error("Resource not found!")
+            val wordMLPackage = WordprocessingMLPackage.load(docxResource)
             val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
             VariablePrepare.prepare(wordMLPackage)
             val template = XmlUtils.deepCopy(mainDocumentPart.contents)
@@ -238,7 +239,7 @@ class PlanningViewModel(
             }
 
             // Save the new document
-            wordMLPackage.save(File("/Users/leobenz/Downloads/Anschreiben_Jubilare_combined.docx"))
+            wordMLPackage.save(file)
             println("printed!!!")
         }
     }

@@ -39,7 +39,7 @@ fun JubilareImport(navigateBack: () -> Unit = {}) {
                 type = PickerType.Image,
                 mode = PickerMode.Single,
                 title = "Bild auswählen",
-                initialDirectory = "/custom/initial/path"
+                initialDirectory = System.getProperty("user.home")
             ) { file ->
                 if (file != null) {
                     viewModel.import(file)

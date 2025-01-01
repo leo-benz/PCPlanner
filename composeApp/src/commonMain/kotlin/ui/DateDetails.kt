@@ -13,16 +13,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.char
 import model.AnniversaryJubilar
 import model.BirthdayJubilar
 import model.GERMAN_FULL
 import org.koin.compose.viewmodel.koinViewModel
 import viewmodel.PlanningViewModel
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun DateDetails(modifier: Modifier = Modifier) {
@@ -79,13 +85,23 @@ fun DateDetails(modifier: Modifier = Modifier) {
                     }
                 }
 
+                val launcher = rememberFileSaverLauncher { result ->
+                    if (result != null) {
+                        viewModel.print(jubilare, date.year, result.file)
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
                     if (jubilare.isNotEmpty()) {
-                        TextButton(onClick = { viewModel.print(jubilare, date.year) }) {
-                            Text("Print")
+                        TextButton(onClick = { launcher.launch(
+                            baseName = "Jubilare_${date.format(LocalDate.Format { dayOfMonth(); char('_'); monthNumber(); char('_'); year() })}",
+                            extension = "docx",
+                            initialDirectory = System.getProperty("user.home")
+                        ) }) {
+                            Text("Einladungen Speichern")
                         }
                     }
                     TextButton(onClick = { viewModel.dismissDateDetails() }) {

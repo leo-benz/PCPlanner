@@ -1,6 +1,5 @@
 package di
 
-import androidx.compose.ui.text.intl.Locale
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import database.AppDatabase
@@ -12,7 +11,8 @@ actual val platformModule = module {
     single<AppDatabase> { createRoomDatabase() }
 }
 
-private fun getAppDataDirectory(appName: String): File {
+fun getAppDataDirectory(): File {
+    val appName = "PCPlanner"
     val os = System.getProperty("os.name").lowercase()
 
     return when {
@@ -30,7 +30,7 @@ private fun getAppDataDirectory(appName: String): File {
 
 fun createRoomDatabase(): AppDatabase {
     // e.g. "PCPlanner" as your app name
-    val appDataDir = getAppDataDirectory("PCPlanner").apply { mkdirs() }
+    val appDataDir = getAppDataDirectory().apply { mkdirs() }
 
     // e.g. "mydatabase.db" as your dbFileName
     val dbFile = File(appDataDir, dbFileName)

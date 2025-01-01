@@ -4,25 +4,16 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
-import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.json.*
-import java.time.format.DateTimeFormatter
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import repository.JubilareRepository
-import kotlin.uuid.Uuid
 
 @Serializable
 data class JubilareWrapper(
@@ -30,7 +21,6 @@ data class JubilareWrapper(
 )
 
 class JubilareListDeserializer : KSerializer<List<Jubilar>> {
-    private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("Jubilare") {
