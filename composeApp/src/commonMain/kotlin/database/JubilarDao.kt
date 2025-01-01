@@ -27,7 +27,7 @@ interface JubilarDao {
 //    @Insert(onConflict = OnConflictStrategy.REPLACE)
 //    suspend fun insertAll(jubilars: List<BirthdayJubilar>)
 
-    @Query("SELECT * FROM JubilarEntity")
+    @Query("SELECT * FROM JubilarEntity ORDER BY originalJubilarDate")
     fun getAllJubilare(): Flow<List<JubilarEntity>>
 
 //    @Query("SELECT * FROM BirthdayJubilar")
@@ -58,7 +58,7 @@ interface JubilarDao {
 //    suspend fun delete(jubilar: AnniversaryJubilar)
 
     @Transaction
-    @Query("SELECT * FROM JubilarEntity WHERE strftime('%m-%d', originalJubilarDate) = strftime('%m-%d', :date)")
+    @Query("SELECT * FROM JubilarEntity WHERE strftime('%m-%d', originalJubilarDate) = strftime('%m-%d', :date) ORDER BY originalJubilarDate")
     fun getJubilare(date: LocalDate): Flow<List<JubilarEntity>>
 
 //    @Transaction

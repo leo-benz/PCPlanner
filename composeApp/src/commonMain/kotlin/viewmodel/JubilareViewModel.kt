@@ -14,9 +14,6 @@ import kotlin.uuid.Uuid
 class JubilareViewModel(
     private val repository: JubilareRepository
 ): ViewModel() {
-    fun greet(): String {
-        return repository.greet()
-    }
 
     fun getJubilare(): Flow<List<Jubilar>> {
         return repository.getJubilare()
@@ -30,7 +27,7 @@ class JubilareViewModel(
     private fun generateRandomJubilar(): Jubilar {
         val firstNames = listOf("John", "Jane", "Alex", "Emily", "Chris")
         val lastNames = listOf("Doe", "Smith", "Johnson", "Williams", "Brown")
-        val genders = Gender.values()
+        val genders = Gender.entries.toTypedArray()
         val classes = listOf(BirthdayJubilar::class, AnniversaryJubilar::class)
 
         val firstName = firstNames.random()
@@ -73,5 +70,13 @@ class JubilareViewModel(
 
     fun deleteAllJubilare() {
         repository.deletaAll()
+    }
+
+    fun save(jubilar: Jubilar) {
+        repository.insert(jubilar)
+    }
+
+    fun delete(deletedJubilar: Jubilar) {
+        repository.delete(deletedJubilar)
     }
 }

@@ -1,11 +1,16 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package repository
 
 import database.AppDatabase
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import model.Jubilar
-import model.JubilarWithInvites
 import model.toDomain
 import model.toEntity
 import org.koin.core.component.KoinComponent
@@ -21,6 +26,7 @@ interface JubilareRepository {
     fun deletaAll()
     fun exists(jubilarId: Uuid): Flow<Boolean>
     fun getStoredJubilar(it: Jubilar): Flow<Jubilar?>
+    fun delete(deletedJubilar: Jubilar)
 //    fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>>
 }
 
@@ -62,6 +68,12 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
     override fun getStoredJubilar(it: Jubilar): Flow<Jubilar?> {
         val entity = it.toEntity()
         return database.jubilarDao().getJubilarByData(entity.lastName, entity.originalJubilarDate, entity.firstName, entity.gender, entity.type).map { it?.toDomain() }
+    }
+
+    override fun delete(deletedJubilar: Jubilar) {
+        coroutineScope.launch {
+            database.jubilarDao().delete(deletedJubilar.toEntity())
+        }
     }
 
 //    override fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>> {

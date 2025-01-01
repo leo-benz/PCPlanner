@@ -15,6 +15,7 @@ import kotlin.uuid.ExperimentalUuidApi
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun JubilarEdit(
+    modifier: Modifier = Modifier,
     jubilar: Jubilar,
     onJubilarUpdate: (Jubilar) -> Unit
 ) {
@@ -32,16 +33,13 @@ fun JubilarEdit(
             ""
         )
     }
-    val dateFormat = LocalDate.Format {
-        dayOfMonth(Padding.ZERO);char('.');monthNumber(Padding.ZERO);char('.');year()
-    }
-    var originalJubilarDate by remember(jubilar) { mutableStateOf(jubilar.originalJubilarDate.format(dateFormat)) }
+
     var address by remember(jubilar) { mutableStateOf(jubilar.address) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(16.dp)
-            .fillMaxSize(),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Center
     ) {
         if (jubilar is BirthdayJubilar) {
@@ -53,10 +51,11 @@ fun JubilarEdit(
                         jubilar.toEntity().copy(firstName = firstName).toDomain()
                     )
                 },
-                label = { Text("First Name") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Vorname") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
         TextField(
             value = lastName,
@@ -66,26 +65,61 @@ fun JubilarEdit(
                     jubilar.toEntity().copy(lastName = lastName).toDomain()
                 )
             },
-            label = { Text("Last Name") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Nachname") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // We'll keep the displayed date in a separate var so we can show partial input even if invalid
+        val dateFormat = LocalDate.Format {
+            dayOfMonth(Padding.ZERO);char('.');monthNumber(Padding.ZERO);char('.');year()
+        }
+        var dateText by remember(jubilar) {
+            mutableStateOf(jubilar.originalJubilarDate.format(dateFormat))
+        }
+
+        // Track whether the date is currently valid
+        var dateError by remember { mutableStateOf<String?>(null) }
+
 
         TextField(
-            value = originalJubilarDate,
-            onValueChange = {
-                originalJubilarDate = it
-                // Validate and update the date
-                onJubilarUpdate(
-                    jubilar.toEntity().copy(originalJubilarDate = kotlin.runCatching {
-                        LocalDate.parse(it, dateFormat)
-                    }.getOrDefault(jubilar.originalJubilarDate)).toDomain()
-                )
+            value = dateText,
+            onValueChange = { newText ->
+                // Optionally, allow only digits and '.' in input
+                val filteredText = newText.filter { it.isDigit() || it == '.' }
+
+                // Attempt to parse
+                val parsedDate = runCatching {
+                    LocalDate.parse(filteredText, dateFormat)
+                }.getOrNull()
+
+                if (parsedDate == null && filteredText.isNotEmpty()) {
+                    // Mark as error if it's not an empty string
+                    dateError = "Datum in dd.MM.yyyy Format eingeben"
+                } else {
+                    dateError = null
+                    // If parsed, update the domain
+                    if (parsedDate != null) {
+                        onJubilarUpdate(
+                            jubilar.toEntity().copy(
+                                originalJubilarDate = parsedDate
+                            ).toDomain()
+                        )
+                    }
+                }
+                dateText = filteredText
             },
-            label = { Text(if (jubilar is BirthdayJubilar) "Birthdate" else "Hochzeitstag") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text(if (jubilar is BirthdayJubilar) "Geburtstag" else "Hochzeitstag") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = (dateError != null),
+            supportingText = {
+                if (dateError != null) {
+                    Text(dateError!!)
+                }
+            },
         )
-        Spacer(modifier = Modifier.height(8.dp))
         if (jubilar is BirthdayJubilar) {
             ExposedDropdownMenuBox(
                 expanded = genderDropDownExpanded,
@@ -95,9 +129,13 @@ fun JubilarEdit(
             {
 
                 TextField(
-                    value = gender.name, // Display the current gender
+                    value = when (gender) {
+                        Gender.MALE -> "Männlich"
+                        Gender.FEMALE -> "Weiblich"
+                        else -> "N/A"
+                    }, // Display the current gender
                     onValueChange = {}, // TextField is read-only; changes happen through dropdown
-                    label = { Text("Gender") },
+                    label = { Text("Geschlecht") },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderDropDownExpanded) },
                     readOnly = true, // Prevent manual editing
@@ -109,7 +147,11 @@ fun JubilarEdit(
                 ) {
                     genders.forEach { genderOption ->
                         DropdownMenuItem(
-                            text = { Text(genderOption.name) },
+                            text = { Text( when (genderOption) {
+                                Gender.MALE -> "Männlich"
+                                Gender.FEMALE -> "Weiblich"
+                                else -> "N/A"
+                            }) },
                             onClick = {
                                 gender = genderOption
                                 genderDropDownExpanded = false // Close dropdown after selection
@@ -121,7 +163,7 @@ fun JubilarEdit(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         TextField(
@@ -132,7 +174,7 @@ fun JubilarEdit(
                     jubilar.toEntity().copy(address = address).toDomain()
                 )
             },
-            label = { Text("Address") },
+            label = { Text("Addresse") },
             modifier = Modifier.fillMaxWidth()
         )
     }

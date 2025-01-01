@@ -1,11 +1,9 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.onClick
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,12 +12,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format
-import kotlinx.datetime.format.DateTimeFormat
-import kotlinx.datetime.format.Padding
-import kotlinx.datetime.format.char
-import model.*
+import model.Jubilar
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import ui.JubilarEdit
@@ -93,11 +86,11 @@ fun ImportScreen(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxHeight(),
             ) {
                 if (jubilareList.isNotEmpty()) {
                     val jubilar = jubilareList[currentIndex]
-                    JubilarEdit(jubilar) { onJubilarUpdate(currentIndex, it) }
+                    JubilarEdit(Modifier.align(Alignment.Center), jubilar) { onJubilarUpdate(currentIndex, it) }
                 } else {
                     Text(
                         "No Jubilars Available",
