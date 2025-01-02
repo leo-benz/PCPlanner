@@ -15,7 +15,7 @@ plugins {
     id("dev.hydraulic.conveyor") version "1.12"
 }
 
-version = "0.1"
+version = "0.1.1"
 
 kotlin {
 //    androidTarget {
@@ -116,6 +116,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.okhttp)
         }
+
+
     }
 }
 
@@ -194,6 +196,13 @@ tasks.withType<KotlinCompile> {
             "-opt-in=kotlin.uuid.ExperimentalUuidApi",
         )
     }
+}
+
+dependencies {
+    linuxAmd64(compose.desktop.linux_x64)
+    macAmd64(compose.desktop.macos_x64)
+    macAarch64(compose.desktop.macos_arm64)
+    windowsAmd64(compose.desktop.windows_x64)
 }
 
 kotlin.sourceSets["commonMain"].kotlin.srcDir("$buildDir/generated/src")
