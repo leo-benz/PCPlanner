@@ -11,16 +11,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download macOS ARM build
-        uses: actions/download-artifact@v4
-        with:
-          name: build-macos-latest
-          path: ./artifacts
+#      - name: Download macOS ARM build
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: build-macOS
+#          path: ./artifacts
+#
+#      - name: Download Windows build
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: build-Windows
+#          path: ./artifacts
 
-      - name: Download Windows build
+      - name: Download Ubuntu build
         uses: actions/download-artifact@v4
         with:
-          name: build-windows-latest
+          name: build-Ubuntu
           path: ./artifacts
 
       - name: Run Conveyor

@@ -8,10 +8,10 @@
 name: Build Multiplatform Project
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
   workflow_dispatch:
   workflow_call:
 
@@ -22,7 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+#        os: [macos-latest, windows-latest]
+        os: [ubuntu-latest]
         gradle: [8.7]
     runs-on: ${{ matrix.os }}
     permissions:
