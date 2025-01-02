@@ -27,6 +27,7 @@ import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import dev.leobenz.pcplanner.OPENAI_API_KEY
 
 class ImportViewModel(
     private val repository: JubilareRepository
@@ -39,7 +40,7 @@ class ImportViewModel(
 
 
     val openAI = OpenAI(
-        token = "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",
+        token = OPENAI_API_KEY,
         timeout = Timeout(socket = 60.seconds),
     )
 
@@ -66,6 +67,8 @@ class ImportViewModel(
     }
 
     fun import(imagePath: PlatformFile) {
+        println("OpenAI API Key: ${System.getProperty("plugin:my.compose.api:openaiApiKey")}")
+
         viewModelScope.launch {
             println("Importing image from ${imagePath.path}")
             val cacheDir = File(getAppDataDirectory(), "cache/").apply { mkdirs() }

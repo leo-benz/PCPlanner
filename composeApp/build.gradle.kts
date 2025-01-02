@@ -192,3 +192,22 @@ tasks.withType<KotlinCompile> {
         )
     }
 }
+
+kotlin.sourceSets["commonMain"].kotlin.srcDir("$buildDir/generated/src")
+
+tasks.register("generateApiKey") {
+    doLast {
+        val dir = file("$buildDir/generated/src")
+        dir.mkdirs()
+        val file = file("$dir/ApiKey.kt")
+        file.writeText("""
+            package dev.leobenz.pcplanner
+            
+            const val OPENAI_API_KEY = "${System.getenv("OPENAI_API_KEY") ?: "API_KEY_NOT_SET"}"
+        """.trimIndent())
+    }
+}
+
+tasks.named("compileKotlinJvm") {
+    dependsOn("generateApiKey")
+}

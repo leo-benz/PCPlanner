@@ -55,6 +55,8 @@ jobs:
         key: ${{ runner.os }}-v1-${{ hashFiles('*.versions.toml') }}
     - name: Build with Gradle Wrapper
       run: ./gradlew createDistributable --scan --configuration-cache
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
