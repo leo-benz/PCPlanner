@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    id("dev.hydraulic.conveyor") version "1.2"
+    id("dev.hydraulic.conveyor") version "1.12"
 }
 
 version = "0.1"
