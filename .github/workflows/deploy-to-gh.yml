@@ -26,7 +26,7 @@ jobs:
       - name: Download Ubuntu build
         uses: actions/download-artifact@v4
         with:
-          name: build-Ubuntu
+          name: build-Linux
           path: ./artifacts
 
       - name: Run Conveyor
