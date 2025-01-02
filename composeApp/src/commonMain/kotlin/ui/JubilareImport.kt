@@ -26,7 +26,7 @@ fun JubilareImport(navigateBack: () -> Unit = {}) {
     Scaffold (
         topBar = {
             CenterAlignedTopAppBar(title = {
-                Text("Jubilare")
+                Text("Jubilare Importieren")
             }, navigationIcon = {
                 IconButton(onClick = navigateBack) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

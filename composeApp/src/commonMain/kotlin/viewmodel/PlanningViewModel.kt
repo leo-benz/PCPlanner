@@ -32,85 +32,102 @@ class PlanningViewModel(
 
     var year = MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year)
 
-    var isInitialized: StateFlow<Boolean> = year.flatMapLatest { year ->
-        standchenRepository.getStandchen(year).map { it.isNotEmpty() }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+//    var isInitialized: StateFlow<Boolean> = year.flatMapLatest { year ->
+//        standchenRepository.getStandchen(year).map { it.isNotEmpty() }
+//    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     val errorMessage = MutableStateFlow<String?>(null)
 
     var holiday: StateFlow<Holiday?> = year.flatMapLatest { year ->
         standchenRepository.getSummerHoliday(year).onStart { println("Flow started for year = $year") }
-            .onEach { holiday -> println("Flow emitted holiday = $holiday") }
+            .onEach { holiday ->
+                println("Flow emitted holiday = $holiday")
+                if (holiday != null) {
+                    val standchen = standchenRepository.getStandchen(year).first()
+                    if (standchen.isEmpty()) {
+                        generateInitialStandchen(holiday)
+                    }
+                    assignJubilareToStandchen()
+                }
+            }
             .onCompletion { cause -> println("Flow completed. Cause: $cause") }
     }.catch { e ->
         println("Flow caught error: $e")
-        errorMessage.value = "Error fetching summer holiday, please configure holidays manually!\n${e.message}"
+        e.printStackTrace()
+//        errorMessage.value = "Error fetching summer holiday, please configure holidays manually!\n${e.message}"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
     fun updateYear(newYear: Int) {
         year.value = newYear
     }
 
-    fun generateInitialStandchen() {
+    suspend fun generateInitialStandchen(holiday: Holiday) {
         // Create a standchen for every second sunday starting from the first sunday in the year
         // Skip the second sunday in a month
-        viewModelScope.launch {
-            holiday.first().let { holiday ->
-                val standchenList = mutableListOf<Standchen>()
-                val firstSunday = getFirstSunday(year.value, 1)
-                var day = firstSunday
-                var month = firstSunday.month
-                var sundayCount = 1
-                var skipWeek = false
-                while (day.year == year.value) {
-                    if (holiday != null && day in holiday.startDate..holiday.endDate) {
-                        skipWeek = true
-                    }
-                    if (sundayCount == 2) {
-                        skipWeek = true
-                    }
-                    if (!skipWeek) {
-                        standchenList.add(Standchen(day))
-                    }
-                    day = day.plusDays(7)
-                    skipWeek = !skipWeek
-                    sundayCount++
-                    if (day.month != month) {
-                        month = day.month
-                        sundayCount = 1
-                    }
-                }
-                standchenRepository.insert(standchenList)
+
+        val standchenList = mutableListOf<Standchen>()
+        val firstSunday = getFirstSunday(year.value, 1)
+        var day = firstSunday
+        var month = firstSunday.month
+        var sundayCount = 1
+        var skipWeek = false
+        while (day.year == year.value) {
+            if (holiday != null && day in holiday.startDate..holiday.endDate) {
+                skipWeek = true
             }
+            if (sundayCount == 2) {
+                skipWeek = true
+            }
+            if (!skipWeek) {
+                standchenList.add(Standchen(day))
+            }
+            day = day.plusDays(7)
+            skipWeek = !skipWeek
+            sundayCount++
+            if (day.month != month) {
+                month = day.month
+                sundayCount = 1
+            }
+        }
+        standchenRepository.insert(standchenList)
+    }
+
+
+    private fun filterEligibleJubilare(jubilare: List<Jubilar>): List<Jubilar> {
+        return jubilare.filter {
+            val age = year.value - it.originalJubilarDate.year
+            var eligible = age == 80 || age >= 85
+            if (it is AnniversaryJubilar) {
+                eligible = eligible || it.marriageAnniversary(year.value) != MarriageAnniversary.NONE
+            }
+
+            return@filter eligible
         }
     }
 
-    fun assignJubilareToStandchen() {
-        viewModelScope.launch {
-            val standchenList = standchenRepository.getStandchen(year.value).first()
-            var jubilare = jubilareRepository.getJubilare().first()
-            jubilare = jubilare.filter {
-                val age = year.value - it.originalJubilarDate.year
-                var eligible = age == 80 || age >= 85
-                if (it is AnniversaryJubilar) {
-                    eligible = eligible || it.marriageAnniversary(year.value) != MarriageAnniversary.NONE
-                }
+    suspend fun assignJubilareToStandchen() {
+        val standchenList = standchenRepository.getStandchen(year.value).first()
+        var jubilare = jubilareRepository.getJubilare().first()
+        jubilare = filterEligibleJubilare(jubilare)
 
-                // eligible = true
-
-                return@filter eligible
+        jubilare = jubilare.sortedBy {
+            LocalDate(
+                year.value,
+                it.originalJubilarDate.monthNumber,
+                it.originalJubilarDate.dayOfMonth
+            )
+        }
+        var currentStandchen = standchenList.first()
+        for (ju in jubilare) {
+            val currentBirthday =
+                LocalDate(year.value, ju.originalJubilarDate.monthNumber, ju.originalJubilarDate.dayOfMonth)
+            if (currentStandchen.date < currentBirthday) {
+                currentStandchen = standchenList.first { it.date > currentBirthday }
             }
-            jubilare = jubilare.sortedBy { LocalDate(year.value, it.originalJubilarDate.monthNumber, it.originalJubilarDate.dayOfMonth) }
-            var currentStandchen = standchenList.first()
-            for (ju in jubilare) {
-                val currentBirthday = LocalDate(year.value, ju.originalJubilarDate.monthNumber, ju.originalJubilarDate.dayOfMonth)
-                if (currentStandchen.date < currentBirthday) {
-                    currentStandchen = standchenList.first { it.date > currentBirthday }
-                }
-                invite(ju, currentStandchen)
-            }
+            invite(ju, currentStandchen)
         }
     }
+
 
     private fun invite(jubilar: Jubilar, standchen: Standchen) {
         var invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId!!)
@@ -139,7 +156,8 @@ class PlanningViewModel(
 
     fun isJubilarDay(day: LocalDate): Flow<Boolean> {
         return jubilareRepository.getJubilare().map { jubilareList ->
-            jubilareList.any { it.originalJubilarDate.monthNumber == day.monthNumber && it.originalJubilarDate.dayOfMonth == day.dayOfMonth }
+            val eligibleJubilare = filterEligibleJubilare(jubilareList)
+            eligibleJubilare.any { it.originalJubilarDate.monthNumber == day.monthNumber && it.originalJubilarDate.dayOfMonth == day.dayOfMonth }
         }
     }
 
@@ -170,8 +188,9 @@ class PlanningViewModel(
     }
 
     fun jubilare(date: LocalDate): Flow<List<Jubilar>> {
-        val jubilareFlow = jubilareRepository.getJubilare(date)
-        val standchenJubilareFlow = standchenRepository.getStandchenWithJubilare(date).map { it?.jubilare ?: emptyList() }
+        val jubilareFlow = jubilareRepository.getJubilare(date).map { filterEligibleJubilare(it) ?: emptyList() }
+        val standchenJubilareFlow =
+            standchenRepository.getStandchenWithJubilare(date).map { it?.jubilare ?: emptyList() }
         return combine(jubilareFlow, standchenJubilareFlow) { jubilare, standchenJubilare ->
             (jubilare + standchenJubilare).distinctBy { it.jubilarId }
         }
@@ -250,18 +269,7 @@ class PlanningViewModel(
         }
     }
 
-
-    // TODO: File Picker with Settings for the input location with the templates and the output location (folder)
-    // TODO: Naming schema for the output files
     // TODO: Print button for individual jubilare, all jubilare for a standchen, all jubilare of a month and a manual date range
-
-//    fun fillPlaceholdersInWordDocument(inputFilePath: String, outputFilePath: String, placeholders: Map<String, String>) {
-//        val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
-//
-//        VariablePrepare.prepare(wordMLPackage)
-//        mainDocumentPart.variableReplace(placeholders)
-//        wordMLPackage.save(File(outputFilePath))
-//    }
 }
 
 private fun LocalDate.plusDays(i: Int): LocalDate {

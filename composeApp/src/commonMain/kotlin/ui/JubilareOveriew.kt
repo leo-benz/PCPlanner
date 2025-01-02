@@ -37,7 +37,7 @@ fun JubilareOverview(navigateBack: () -> Unit = {}) {
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = {
-            Text("Jubilare")
+            Text("Jubilare Übersicht")
         }, navigationIcon = {
             IconButton(onClick = navigateBack) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

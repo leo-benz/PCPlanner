@@ -19,7 +19,7 @@ interface StandchenRepository {
     fun getStandchen(year: Int): Flow<List<Standchen>>
     fun getStandchen(date: LocalDate): Flow<Standchen?>
     fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?>
-    fun insert(standchen: List<Standchen>)
+    suspend fun insert(standchen: List<Standchen>)
     suspend fun insert(standchen: Standchen)
     suspend fun remove(standchen: Standchen)
     fun getSummerHoliday(year: Int): Flow<Holiday?>
@@ -49,10 +49,8 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         return database.standchenDao().getStandchenWithJubilare(date).map { it?.toDomain() }
     }
 
-    override fun insert(standchen: List<Standchen>) {
-        coroutineScope.launch {
-            database.standchenDao().insert(standchen)
-        }
+    override suspend fun insert(standchen: List<Standchen>) {
+        database.standchenDao().insert(standchen)
     }
 
     override suspend fun insert(standchen: Standchen) {
@@ -81,8 +79,6 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
             .onEach { holiday -> println("Repo Flow emitted holiday = $holiday") }
             .onCompletion { cause -> println("Repo Flow completed. Cause: $cause") }
 
-        emitAll(holidayFlow)
-
         val storedHoliday = database.standchenDao().getSummerHoliday(year).firstOrNull()
 
         if (storedHoliday == null) {
@@ -103,11 +99,16 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
                 }
                 database.standchenDao().insert(Holiday(holidayResponse.startDate, holidayResponse.endDate))
             } catch (e: NoSuchElementException) {
-                throw SummerHolidayNotFoundException("No summer holiday found for $year", e)
+                println("No summer holiday found for $year no such element!!!")
+//                throw SummerHolidayNotFoundException("No summer holiday found for $year", e)
             } catch (e: Exception) {
-                throw SummerHolidayFetchException("Error decoding holiday API response", e)
+                println("Generic Exception in holiday fetching: ${e.message}")
+                e.printStackTrace()
+//                throw SummerHolidayFetchException("Error decoding holiday API response", e)
             }
         }
+
+        emitAll(holidayFlow)
     }
 }
 

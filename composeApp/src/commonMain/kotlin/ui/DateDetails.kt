@@ -65,7 +65,7 @@ fun DateDetails(modifier: Modifier = Modifier) {
                         Text(text = text, style = MaterialTheme.typography.bodyMedium)
 
                         TextButton(onClick = { viewModel.toggleStandchen(date) }) {
-                            Text(if (isStandchen) "Absagen" else "Ständchen Spielen")
+                            Text(if (isStandchen) "Ständchen Absagen" else "Ständchen Spielen")
                         }
                     }
                 }

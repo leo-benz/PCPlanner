@@ -1,8 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -58,23 +56,23 @@ fun App() {
 fun HomeScreen(navController: NavController) {
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = {
-            Text("Home")
+            Text("Ständchen Planer Posaunenchor Maichingen")
         })
     }) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Button(onClick = { navController.navigate("jubilare") }) {
+            Button(onClick = { navController.navigate("jubilare") }, modifier = Modifier.fillMaxWidth()) {
                 Text("Jubilare Übersicht")
             }
-            Button(onClick = { navController.navigate("planning") }) {
+            Button(onClick = { navController.navigate("planning") }, modifier = Modifier.fillMaxWidth()) {
                 Text("Planung")
             }
-            Button(onClick = { navController.navigate("import") }) {
-                Text("Geburtstage Importieren")
+            Button(onClick = { navController.navigate("import") }, modifier = Modifier.fillMaxWidth()) {
+                Text("Jubilare Importieren")
             }
         }
     }
