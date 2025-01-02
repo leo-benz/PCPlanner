@@ -16,5 +16,4 @@ abstract class AppDatabase: RoomDatabase(), DB {
 internal const val dbFileName = "Jubilare.db"
 
 interface DB {
-    fun clearAllTables() {}
 }
