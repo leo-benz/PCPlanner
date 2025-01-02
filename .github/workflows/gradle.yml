@@ -54,7 +54,7 @@ jobs:
           ~/.konan
         key: ${{ runner.os }}-v1-${{ hashFiles('*.versions.toml') }}
     - name: Build with Gradle Wrapper
-      run: ./gradlew createDistributable --scan --configuration-cache
+      run: ./gradlew createDistributable
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     - name: Upload artifacts
