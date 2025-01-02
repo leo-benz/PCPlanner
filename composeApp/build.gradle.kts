@@ -12,8 +12,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    id("dev.hydraulic.conveyor") version "1.2"
 }
 
+version = "0.1"
 
 kotlin {
 //    androidTarget {
@@ -23,7 +25,11 @@ kotlin {
 //        }
 //    }
     
-    jvm("desktop")
+    jvm {
+        withJava()
+    }
+
+    jvmToolchain(17)
     
 //    listOf(
 //        iosX64(),
@@ -41,7 +47,7 @@ kotlin {
             kotlin.srcDir("build/generated/ksp/metadata")
         }
 
-        val desktopMain by getting
+        val jvmMain by getting
         
 //        androidMain.dependencies {
 //            implementation(compose.preview)
@@ -105,7 +111,7 @@ kotlin {
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
         }
-        desktopMain.dependencies {
+        jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.okhttp)
         }
@@ -155,7 +161,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "dev.leobenz.pcplanner"
+            packageName = "dev-leobenz-pcplanner"
             packageVersion = "1.0.0"
         }
     }

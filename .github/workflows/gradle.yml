@@ -12,13 +12,17 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+  workflow_call:
+
+
 
 jobs:
   build-multiplatform-project:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest, windows-latest]
         gradle: [8.7]
     runs-on: ${{ matrix.os }}
     permissions:
@@ -39,7 +43,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-home-cache-cleanup: true
+        cache-cleanup: true
         gradle-version: 8.7
         cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
     - name: Cache KMP tooling
@@ -49,18 +53,13 @@ jobs:
           ~/.konan
         key: ${{ runner.os }}-v1-${{ hashFiles('*.versions.toml') }}
     - name: Build with Gradle Wrapper
-      run: ./gradlew build --scan --configuration-cache
+      run: ./gradlew createDistributable --scan --configuration-cache
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ runner.os }}
+        path: composeApp/build/libs
 
-    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
-    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
-    #
-    # - name: Setup Gradle
-    #   uses: gradle/actions/setup-gradle@dbbdc275be76ac10734476cc723d82dfe7ec6eda # v3.4.2
-    #   with:
-    #     gradle-version: '8.5'
-    #
-    # - name: Build with Gradle 8.5
-    #   run: gradle build 
 
   dependency-submission:
 
