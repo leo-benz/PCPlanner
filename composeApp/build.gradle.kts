@@ -205,6 +205,12 @@ dependencies {
     windowsAmd64(compose.desktop.windows_x64)
 }
 
+configurations.all {
+    attributes {
+        attribute(Attribute.of("ui", String::class.java), "awt")
+    }
+}
+
 kotlin.sourceSets["commonMain"].kotlin.srcDir("$buildDir/generated/src")
 
 tasks.register("generateApiKey") {
