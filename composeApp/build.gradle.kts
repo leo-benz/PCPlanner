@@ -21,7 +21,7 @@ kotlin {
 //    androidTarget {
 //        @OptIn(ExperimentalKotlinGradlePluginApi::class)
 //        compilerOptions {
-//            jvmTarget.set(JvmTarget.JVM_11)
+//            jvmTarget.set(JvmTarget.JVM_17)
 //        }
 //    }
     
@@ -56,6 +56,7 @@ kotlin {
 //            implementation(libs.koin.android)
 //            implementation(libs.koin.androidx.compose)
 //        }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -154,6 +155,8 @@ kotlin {
 //        debugImplementation(compose.uiTooling)
 //    }
 //}
+
+val openaiApiKey: String = System.getenv("OPENAI_API_KEY") ?: "API_KEY_NOT_SET"
 
 compose.desktop {
     application {
