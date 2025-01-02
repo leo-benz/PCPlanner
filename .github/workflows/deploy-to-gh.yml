@@ -29,6 +29,13 @@ jobs:
           name: build-Linux
           path: ./artifacts
 
+      - name: Debug
+        uses: actions/github-script@v4
+        with:
+          script: |
+            ls . |
+            ls ./artifacts
+
       - name: Run Conveyor
         uses: hydraulic-software/conveyor/actions/build@v9.2
         env:
