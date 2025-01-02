@@ -31,13 +31,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-macOS
-          path: ./artifacts
+          path: ./composeApp/build
 
       - name: Run Conveyor
         uses: hydraulic-software/conveyor/actions/build@v9.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          command: make copied-site
+          command: -vvv make copied-site
           signing_key: ${{ secrets.SIGNING_KEY }}
           agree_to_license: 1
