@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-//    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
@@ -18,15 +18,15 @@ plugins {
 version = "0.1.1"
 
 kotlin {
-//    androidTarget {
-//        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-//        compilerOptions {
-//            jvmTarget.set(JvmTarget.JVM_17)
-//        }
-//    }
+    androidTarget {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
     
     jvm {
-        withJava()
+//        withJava()
     }
 
     jvmToolchain(17)
@@ -49,13 +49,13 @@ kotlin {
 
         val jvmMain by getting
         
-//        androidMain.dependencies {
-//            implementation(compose.preview)
-//            implementation(libs.androidx.activity.compose)
-//
-//            implementation(libs.koin.android)
-//            implementation(libs.koin.androidx.compose)
-//        }
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
+        }
 
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -84,8 +84,6 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.kotlinx.coroutines.core.jvm)
 
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.ktor.client.serialization)
@@ -115,48 +113,48 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlinx.coroutines.core.jvm)
         }
-
-
     }
 }
 
-//android {
-//    namespace = "dev.leobenz.pcplanner"
-//    compileSdk = libs.versions.android.compileSdk.get().toInt()
-//
-//    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-//    sourceSets["main"].res.srcDirs("src/androidMain/res")
-//    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-//
-//    defaultConfig {
-//        applicationId = "dev.leobenz.pcplanner"
-//        minSdk = libs.versions.android.minSdk.get().toInt()
-//        targetSdk = libs.versions.android.targetSdk.get().toInt()
-//        versionCode = 1
-//        versionName = "1.0"
-//    }
-//    packaging {
-//        resources {
-//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-//        }
-//    }
-//    buildTypes {
-//        getByName("release") {
-//            isMinifyEnabled = false
-//        }
-//    }
-//    compileOptions {
-//        sourceCompatibility = JavaVersion.VERSION_11
-//        targetCompatibility = JavaVersion.VERSION_11
-//    }
-//    buildFeatures {
-//        compose = true
-//    }
-//    dependencies {
-//        debugImplementation(compose.uiTooling)
-//    }
-//}
+android {
+    namespace = "dev.leobenz.pcplanner"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    sourceSets["main"].res.srcDirs("src/androidMain/res")
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+
+    defaultConfig {
+        applicationId = "dev.leobenz.pcplanner"
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        versionCode = 1
+        versionName = "1.0"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
+    }
+    dependencies {
+        debugImplementation(compose.uiTooling)
+    }
+}
 
 val openaiApiKey: String = System.getenv("OPENAI_API_KEY") ?: "API_KEY_NOT_SET"
 
@@ -174,10 +172,16 @@ compose.desktop {
 
 dependencies {
     add("kspCommonMainMetadata", libs.androidx.room.compiler)
-//    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspAndroid", libs.androidx.room.compiler)
 //    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 //    add("kspIosX64", libs.androidx.room.compiler)
 //    add("kspIosArm64", libs.androidx.room.compiler)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().all {
+    if(name != "kspCommonMainKotlinMetadata") {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
 }
 
 room {
