@@ -6,7 +6,7 @@ jobs:
     uses: ./.github/workflows/gradle.yml
     with:
       openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-      gradle-cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+      gradle-cache-encryption-key: ${{ secrets.GRADLEENCRYPTIONKEY }}
   deploy:
     needs: [build]
     runs-on: ubuntu-latest
