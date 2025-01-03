@@ -14,14 +14,6 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
   workflow_call:
-    inputs:
-      openai-api-key:
-        required: false
-        type: string
-      gradle-cache-encryption-key:
-        required: false
-        type: string
-
 
 jobs:
   build-multiplatform-project:
@@ -52,11 +44,11 @@ jobs:
       with:
         cache-cleanup: on-success
         gradle-version: 8.7
-        cache-encryption-key: ${{ inputs.gradle-cache-encryption-key || secrets.GRADLEENCRYPTIONKEY }}
+        cache-encryption-key: ${{ secrets.GRADLEENCRYPTIONKEY }}
     - name: Build with Gradle Wrapper
       run: ./gradlew createDistributable
       env:
-        OPENAI_API_KEY: ${{ inputs.openai-api-key || secrets.OPENAI_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
