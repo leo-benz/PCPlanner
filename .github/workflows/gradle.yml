@@ -54,7 +54,7 @@ jobs:
         gradle-version: 8.7
         cache-encryption-key: ${{ inputs.gradle-cache-encryption-key || secrets.GRADLEENCRYPTIONKEY }}
     - name: Build with Gradle Wrapper
-      run: ./gradlew createDistributable --configuration-cache
+      run: ./gradlew createDistributable
       env:
         OPENAI_API_KEY: ${{ inputs.openai-api-key || secrets.OPENAI_API_KEY }}
     - name: Upload artifacts
