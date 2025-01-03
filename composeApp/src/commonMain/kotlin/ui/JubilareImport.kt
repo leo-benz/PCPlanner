@@ -29,7 +29,7 @@ fun JubilareImport(navigateBack: () -> Unit = {}) {
     val viewModel = koinViewModel<ImportViewModel>()
 
     val isLoading by viewModel.isLoading.collectAsState()
-
+    val loadingMessage by viewModel.loadingMessage.collectAsState()
     Scaffold (
         topBar = {
             CenterAlignedTopAppBar(title = {
@@ -53,19 +53,21 @@ fun JubilareImport(navigateBack: () -> Unit = {}) {
                 }
             }
 
-            if (isLoading) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Extrahiere Jubilare")
-                    CircularProgressIndicator()
+                    Text(loadingMessage)
+                    if (isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Button(onClick = { launcher.launch() }) {
+                            Text("Bild auswählen")
+                        }
+                    }
                 }
-            } else {
-                Button(onClick = { launcher.launch() }) {
-                    Text("Bild auswählen")
-                }
-            }
+
 
             ImportScreen(viewModel.file, viewModel.jubilareState, viewModel::updateJubilar)
         }

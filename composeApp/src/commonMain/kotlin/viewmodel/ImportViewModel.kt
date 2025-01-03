@@ -5,20 +5,20 @@ package viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aallam.openai.api.chat.*
-import com.aallam.openai.api.core.FinishReason
+import com.aallam.openai.api.exception.AuthenticationException
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.api.model.ModelId
 import com.aallam.openai.client.OpenAI
+import dev.leobenz.pcplanner.OPENAI_API_KEY
 import io.github.vinceglb.filekit.core.PlatformFile
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
-import model.*
+import model.BirthdayJubilar
+import model.Gender
+import model.Jubilar
+import model.JubilareWrapper
 import repository.JubilareRepository
 import java.io.File
 import java.net.URLConnection
@@ -26,8 +26,6 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-import dev.leobenz.pcplanner.OPENAI_API_KEY
 
 class ImportViewModel(
     private val repository: JubilareRepository
@@ -39,6 +37,8 @@ class ImportViewModel(
     val jubilareState: StateFlow<List<Jubilar>> get() = _jubilareState
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
+    private val _loadingMessage = MutableStateFlow("")
+    val loadingMessage: StateFlow<String> get() = _loadingMessage
 
     val openAI = OpenAI(
         token = OPENAI_API_KEY,
@@ -67,8 +67,40 @@ class ImportViewModel(
         return digest.joinToString("") { "%02x".format(it) }
     }
 
+    private fun countOccurrences(sb: java.lang.StringBuilder, target: String): Int {
+        if (target.isEmpty()) {
+            return 0
+        }
+
+        val targetLength = target.length
+        var count = 0
+
+        // Iterate over the StringBuilder
+        var i = 0
+        while (i <= sb.length - targetLength) {
+            var found = true
+
+            // Check if the substring matches the target
+            for (j in 0..<targetLength) {
+                if (sb[i + j] != target[j]) {
+                    found = false
+                    break
+                }
+            }
+
+            if (found) {
+                count++
+                i += targetLength - 1 // Skip ahead by the length of the target
+            }
+            i++
+        }
+
+        return count
+    }
+
     fun import(imagePath: PlatformFile) {
         _isLoading.value = true
+        _loadingMessage.value = "Import started"
         viewModelScope.launch {
             println("Importing image from ${imagePath.path}")
             val cacheDir = File(getAppDataDirectory(), "cache/").apply { mkdirs() }
@@ -109,47 +141,56 @@ class ImportViewModel(
                     responseFormat = ChatResponseFormat.JsonObject
                 )
 
-                val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
-                val result = StringBuilder()
-
-                completions.collect { chunk ->
-                    chunk.choices.forEach {
-                        if (it.finishReason == null && it.delta != null && it.delta?.content != null) {
-                            result.append(it.delta?.content)
-                            print(it.delta?.content)
-                        } else if (it.finishReason != null) {
-                            println()
-                            println(it.finishReason)
-                        }
-                    }
-                }
-
                 try {
+                    val completions: Flow<ChatCompletionChunk> = openAI.chatCompletions(chatCompletionRequest)
+                    val result = StringBuilder()
+
+                    completions.collect { chunk ->
+                        chunk.choices.forEach {
+                            if (it.finishReason == null && it.delta != null && it.delta?.content != null) {
+                                result.append(it.delta?.content)
+                                print(it.delta?.content)
+                            } else if (it.finishReason != null) {
+                                println()
+                                println(it.finishReason)
+                            }
+                        }
+
+                        _loadingMessage.value = "${countOccurrences(result, "firstname")} Jubilare extrahiert"
+                    }
+
                     val jsonResponse = result.toString()
                     file.writeText(jsonResponse)
                     println("Wrote JSON to ${file.absolutePath}")
+
+                    _loadingMessage.value = "Jubilare zwischengespeichert"
+
+                    val jubilareList: JubilareWrapper = Json.decodeFromString(file.readText())
+
+                    _jubilareState.update {
+                        jubilareList.jubilare.map {
+                            val storedJubilarFlow = repository.getStoredJubilar(it)
+                            val storedJubilar = storedJubilarFlow.first()
+                            if (storedJubilar != null) {
+                                storedJubilar
+                            } else {
+                                it
+                            }
+                        }
+                    }
+                    _file.update { imagePath.file }
+                    _loadingMessage.value = "Import abgeschlossen"
+                } catch (e: AuthenticationException) {
+                    println("Invalid API Key: ${OPENAI_API_KEY}")
+                    _loadingMessage.value = "Ungültiger API Key. Bitte Support Kontaktieren."
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    println("Failed to write JSON: " + e.message)
+                    _loadingMessage.value = e.localizedMessage
+                    println("Failed to write fetch or write JSON: " + e.message)
+                } finally {
                     _isLoading.value = false
                 }
             }
-
-            val jubilareList: JubilareWrapper = Json.decodeFromString(file.readText())
-
-            _jubilareState.update {
-                jubilareList.jubilare.map {
-                    val storedJubilarFlow = repository.getStoredJubilar(it)
-                    val storedJubilar = storedJubilarFlow.first()
-                    if (storedJubilar != null) {
-                        storedJubilar
-                    } else {
-                        it
-                    }
-                }
-            }
-            _file.update { imagePath.file }
-            _isLoading.value = false
         }
     }
 
