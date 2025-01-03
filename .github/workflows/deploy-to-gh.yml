@@ -30,7 +30,7 @@ jobs:
       - name: Download Ubuntu build
         uses: actions/download-artifact@v4
         with:
-          name: build-macOS
+          name: build
           path: ./composeApp/build
 
       - name: Run Conveyor
