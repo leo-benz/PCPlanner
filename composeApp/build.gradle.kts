@@ -15,7 +15,7 @@ plugins {
     id("dev.hydraulic.conveyor") version "1.12"
 }
 
-version = "0.2.1"
+version = "0.2.2"
 
 kotlin {
     androidTarget {
