@@ -37,7 +37,8 @@ class ImportViewModel(
     val file: StateFlow<File?> get() = _file
     private val _jubilareState = MutableStateFlow<List<Jubilar>>(emptyList())
     val jubilareState: StateFlow<List<Jubilar>> get() = _jubilareState
-
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
 
     val openAI = OpenAI(
         token = OPENAI_API_KEY,
@@ -67,8 +68,7 @@ class ImportViewModel(
     }
 
     fun import(imagePath: PlatformFile) {
-        println("OpenAI API Key: ${System.getProperty("plugin:my.compose.api:openaiApiKey")}")
-
+        _isLoading.value = true
         viewModelScope.launch {
             println("Importing image from ${imagePath.path}")
             val cacheDir = File(getAppDataDirectory(), "cache/").apply { mkdirs() }
@@ -131,6 +131,7 @@ class ImportViewModel(
                 } catch (e: Exception) {
                     e.printStackTrace()
                     println("Failed to write JSON: " + e.message)
+                    _isLoading.value = false
                 }
             }
 
@@ -148,6 +149,7 @@ class ImportViewModel(
                 }
             }
             _file.update { imagePath.file }
+            _isLoading.value = false
         }
     }
 
