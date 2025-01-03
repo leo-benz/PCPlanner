@@ -99,7 +99,6 @@ class ImportViewModel(
     }
 
     fun import(imagePath: PlatformFile) {
-        _isLoading.value = true
         _loadingMessage.value = "Import started"
         viewModelScope.launch {
             println("Importing image from ${imagePath.path}")
@@ -110,6 +109,7 @@ class ImportViewModel(
             val file = File(cacheDir, "$hashValue.json")
 
             if (!file.exists()) {
+                _isLoading.value = true
                 val chatCompletionRequest = ChatCompletionRequest(
                     model = ModelId("gpt-4o-mini"),
                     messages = listOf(
@@ -164,25 +164,9 @@ class ImportViewModel(
                     println("Wrote JSON to ${file.absolutePath}")
 
                     _loadingMessage.value = "Jubilare zwischengespeichert"
-
-                    val jubilareList: JubilareWrapper = Json.decodeFromString(file.readText())
-
-                    _jubilareState.update {
-                        jubilareList.jubilare.map {
-                            val storedJubilarFlow = repository.getStoredJubilar(it)
-                            val storedJubilar = storedJubilarFlow.first()
-                            if (storedJubilar != null) {
-                                storedJubilar
-                            } else {
-                                it
-                            }
-                        }
-                    }
-                    _file.update { imagePath.file }
-                    _loadingMessage.value = "Import abgeschlossen"
                 } catch (e: AuthenticationException) {
                     println("Invalid API Key: ${OPENAI_API_KEY}")
-                    _loadingMessage.value = "Ungültiger API Key. Bitte Support Kontaktieren."
+                    _loadingMessage.value = "Ungültiger API Key ${OPENAI_API_KEY}. Bitte Support Kontaktieren."
                 } catch (e: Exception) {
                     e.printStackTrace()
                     _loadingMessage.value = e.localizedMessage
@@ -191,6 +175,22 @@ class ImportViewModel(
                     _isLoading.value = false
                 }
             }
+
+            val jubilareList: JubilareWrapper = Json.decodeFromString(file.readText())
+
+            _jubilareState.update {
+                jubilareList.jubilare.map {
+                    val storedJubilarFlow = repository.getStoredJubilar(it)
+                    val storedJubilar = storedJubilarFlow.first()
+                    if (storedJubilar != null) {
+                        storedJubilar
+                    } else {
+                        it
+                    }
+                }
+            }
+            _file.update { imagePath.file }
+            _loadingMessage.value = "Import abgeschlossen"
         }
     }
 
