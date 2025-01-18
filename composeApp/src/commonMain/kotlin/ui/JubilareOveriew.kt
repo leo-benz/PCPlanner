@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlinx.datetime.*
@@ -34,6 +35,7 @@ fun JubilareOverview(navigateBack: () -> Unit = {}) {
 
     var showJubilarDialog by remember { mutableStateOf(false) }
     var selectedJubilar by remember { mutableStateOf<Jubilar?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = {
@@ -45,39 +47,49 @@ fun JubilareOverview(navigateBack: () -> Unit = {}) {
         })
     }) {
         Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = {
-                    selectedJubilar = BirthdayJubilar(
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Suche") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.width(32.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Button(onClick = {
+                        selectedJubilar = BirthdayJubilar(
                             lastName = "",
-                    firstName = "",
-                    address = "",
-                    originalJubilarDate = LocalDate(1900, 1, 1),
-                    jubilarId = Uuid.random(),
-                    gender = Gender.MALE, // Default
-                    )  // indicates "create" mode
-                    showJubilarDialog = true
-                }) {
-                    Text("Neuer Geburtstags Jubilar")
-                }
+                            firstName = "",
+                            address = "",
+                            originalJubilarDate = LocalDate(1900, 1, 1),
+                            jubilarId = Uuid.random(),
+                            gender = Gender.MALE, // Default
+                        )  // indicates "create" mode
+                        showJubilarDialog = true
+                    }) {
+                        Text("Neuer Geburtstags Jubilar")
+                    }
 
-                Button(onClick = {
-                    selectedJubilar = AnniversaryJubilar(
-                        lastName = "",
-                        address = "",
-                        originalJubilarDate = LocalDate(1900, 1, 1),
-                        jubilarId = Uuid.random(),
-                    )  // indicates "create" mode
-                    showJubilarDialog = true
-                }) {
-                    Text("Neuer Ehe Jubilar")
+                    Button(onClick = {
+                        selectedJubilar = AnniversaryJubilar(
+                            lastName = "",
+                            address = "",
+                            originalJubilarDate = LocalDate(1900, 1, 1),
+                            jubilarId = Uuid.random(),
+                        )  // indicates "create" mode
+                        showJubilarDialog = true
+                    }) {
+                        Text("Neuer Ehe Jubilar")
+                    }
                 }
-
-//                Button(onClick = { viewModel.deleteAllJubilare() }) {
-//                    Text("Alle Löschen")
-//                }
             }
-            val jubilare by viewModel.getJubilare().collectAsState(initial = emptyList())
-            JubilarTable(jubilare, onEditClick = {
+//            val jubilare by viewModel.getJubilare().collectAsState(initial = emptyList())
+            val filteredJubilare by viewModel.filterJubilare(searchQuery).collectAsState(initial = emptyList())
+
+            JubilarTable(filteredJubilare, onEditClick = {
                 selectedJubilar = it
                 showJubilarDialog = true
             })
@@ -123,13 +135,13 @@ fun JubilarTableHeader() {
         modifier = Modifier.fillMaxWidth().background(MaterialTheme.colors.background).padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(text = "Name", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
-        Text(text = "Geschlecht", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
-        Text(text = "Jubilar Datum", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
-        Text(text = "Adresse", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
+        Text(text = "Name", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground,  fontWeight = FontWeight.Bold)
+        Text(text = "Geschlecht", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground,  fontWeight = FontWeight.Bold)
+        Text(text = "Jubilar Datum", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground,  fontWeight = FontWeight.Bold)
+        Text(text = "Adresse", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground,  fontWeight = FontWeight.Bold)
 //        Text(text = "Opt Out", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
 //        Text(text = "Kommentar", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
-        Text(text = "Hochzeitstag (${Clock.System. now().toLocalDateTime(TimeZone. currentSystemDefault()).year})", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground)
+        Text(text = "Hochzeitstag (${Clock.System. now().toLocalDateTime(TimeZone. currentSystemDefault()).year})", modifier = Modifier.weight(1f), color = MaterialTheme.colors.onBackground,  fontWeight = FontWeight.Bold)
     }
 }
 

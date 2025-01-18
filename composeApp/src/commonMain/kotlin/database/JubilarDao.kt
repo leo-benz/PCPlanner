@@ -84,4 +84,14 @@ interface JubilarDao {
         gender: Gender?,
         type: JubilarType
     ): Flow<JubilarEntity?>
+
+    @Query("""
+    SELECT * FROM JubilarEntity
+    WHERE 
+        (firstName || ' ' || lastName LIKE '%' || :query || '%' 
+        OR lastName || ' ' || firstName LIKE '%' || :query || '%'
+        OR address LIKE '%' || :query || '%')
+    ORDER BY originalJubilarDate
+""")
+    fun filterJubilare(query: String): Flow<List<JubilarEntity>>
 }

@@ -27,6 +27,7 @@ interface JubilareRepository {
     fun exists(jubilarId: Uuid): Flow<Boolean>
     fun getStoredJubilar(it: Jubilar): Flow<Jubilar?>
     fun delete(deletedJubilar: Jubilar)
+    fun filterJubilare(query: String): Flow<List<Jubilar>>
 //    fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>>
 }
 
@@ -74,6 +75,10 @@ class JubilareRepositoryImpl : JubilareRepository, KoinComponent {
         coroutineScope.launch {
             database.jubilarDao().delete(deletedJubilar.toEntity())
         }
+    }
+
+    override fun filterJubilare(query: String): Flow<List<Jubilar>> {
+        return database.jubilarDao().filterJubilare(query).map { list -> list.map { it.toDomain() } }
     }
 
 //    override fun getJubilareWithInvites(day: LocalDate): Flow<List<JubilarWithInvites>> {

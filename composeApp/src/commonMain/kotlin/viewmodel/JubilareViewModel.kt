@@ -24,6 +24,10 @@ class JubilareViewModel(
         repository.insert(jubilar)
     }
 
+    fun filterJubilare(query: String): Flow<List<Jubilar>> {
+        return repository.filterJubilare(query)
+    }
+
     private fun generateRandomJubilar(): Jubilar {
         val firstNames = listOf("John", "Jane", "Alex", "Emily", "Chris")
         val lastNames = listOf("Doe", "Smith", "Johnson", "Williams", "Brown")
