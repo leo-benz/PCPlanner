@@ -5,10 +5,7 @@ package database
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
-import model.Holiday
-import model.Standchen
-import model.StandchenInvite
-import model.StandchenWithJubilareEntity
+import model.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -26,10 +23,10 @@ interface StandchenDao {
     @Delete
     suspend fun delete(standchen: Standchen)
 
-//    @Transaction
-//    @Query("SELECT * FROM Standchen WHERE strftime('%Y', date) = CAST(:year AS TEXT)")
-//    fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>>
-//
+    @Transaction
+    @Query("SELECT * FROM Standchen WHERE strftime('%Y', date) = CAST(:year AS TEXT)")
+    fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilareEntity>>
+
     @Transaction
     @Query("SELECT * FROM Standchen WHERE date = :date")
     fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilareEntity?>

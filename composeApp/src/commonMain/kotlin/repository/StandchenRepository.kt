@@ -26,6 +26,7 @@ interface StandchenRepository {
     fun insert(invite: StandchenInvite)
     fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
     fun insert(holiday: Holiday)
+    fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>>
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -42,7 +43,11 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
     }
 
     override fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen> {
-        return database.standchenDao().getStandchen(jubilar.jubilarId!!, year)
+        return database.standchenDao().getStandchen(jubilar.jubilarId, year)
+    }
+
+    override fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>> {
+        return database.standchenDao().getStandchenWithJubilare(year).map { it.map { it.toDomain() } }
     }
 
     override fun getStandchenWithJubilare(date: LocalDate): Flow<StandchenWithJubilare?> {

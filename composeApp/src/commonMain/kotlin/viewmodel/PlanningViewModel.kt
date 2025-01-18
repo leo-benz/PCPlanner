@@ -18,7 +18,6 @@ import org.docx4j.openpackaging.packages.WordprocessingMLPackage
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart
 import repository.JubilareRepository
 import repository.StandchenRepository
-import repository.SummerHolidayFetchException
 import java.io.File
 import java.time.DayOfWeek
 import kotlin.uuid.ExperimentalUuidApi
@@ -269,7 +268,41 @@ class PlanningViewModel(
         }
     }
 
-    // TODO: Print button for individual jubilare, all jubilare for a standchen, all jubilare of a month and a manual date range
+    // TODO: Add print feature for whole month
+
+    fun exportStandchenCsv(year: Int, file: File) {
+        viewModelScope.launch {
+            try {
+                val standchenList = standchenRepository.getStandchenWithJubilare(year).first() // Fetch Standchen for the year
+                val csvContent = buildCsvContent(standchenList)
+                saveCsvToFile(file, csvContent)
+                // Notify the user (e.g., with a Snackbar) that the export was successful
+            } catch (e: Exception) {
+                // Handle errors (e.g., notify the user of failure)
+            }
+        }
+    }
+
+    private fun buildCsvContent(standchenList: List<StandchenWithJubilare>): String {
+        val header = "Name,Datum,Antwort\n"
+        val rows = standchenList.joinToString("") { standchen ->
+            if (!standchen.jubilare.isEmpty()) {
+                standchen.jubilare.joinToString("\n") { jubilar ->
+                    val name =
+                        if (jubilar is BirthdayJubilar) "${jubilar.firstName} ${jubilar.lastName}" else "Ehepaar" + jubilar.lastName
+                    "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},\n"
+                }
+            } else {
+                ""
+            }
+        }
+        return header + rows
+    }
+
+    private fun saveCsvToFile(file: File, content: String) {
+
+        file.writeText(content)
+    }
 }
 
 private fun LocalDate.plusDays(i: Int): LocalDate {

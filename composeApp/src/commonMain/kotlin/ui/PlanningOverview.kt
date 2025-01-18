@@ -3,20 +3,22 @@
 package ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
 import kotlinx.datetime.LocalDate
-import model.Holiday
+import kotlinx.datetime.format
+import kotlinx.datetime.format.char
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import viewmodel.JubilareViewModel
@@ -35,6 +37,12 @@ fun PlanningOverview(navigateBack: () -> Unit = {}) {
     val snackbarHostState = remember { SnackbarHostState() }
     var showHolidayDialog by remember { mutableStateOf(false) }
     val currentHoliday by viewModel.holiday.collectAsState(initial = null)
+
+    val launcher = rememberFileSaverLauncher { result ->
+        if (result != null) {
+            viewModel.exportStandchenCsv(year, result.file)
+        }
+    }
 
     // Whenever the errorMessage changes, show it as a Snackbar
     LaunchedEffect(errorMessage) {
@@ -56,6 +64,15 @@ fun PlanningOverview(navigateBack: () -> Unit = {}) {
 
             },
             actions = {
+                IconButton(onClick = {
+                    launcher.launch(
+                        baseName = "Jubilare_${year}",
+                        extension = "csv",
+                        initialDirectory = System.getProperty("user.home")
+                    )
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Export Standchen")
+                }
             }, navigationIcon = {
                 androidx.compose.material.IconButton(onClick = navigateBack) {
                     androidx.compose.material.Icon(
