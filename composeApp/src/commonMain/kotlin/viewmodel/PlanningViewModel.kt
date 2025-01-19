@@ -71,7 +71,7 @@ class PlanningViewModel(
         var sundayCount = 1
         var skipWeek = false
         while (day.year == year.value) {
-            if (holiday != null && day in holiday.startDate..holiday.endDate) {
+            if (day in holiday.startDate..holiday.endDate) {
                 skipWeek = true
             }
             if (sundayCount == 2) {
@@ -129,7 +129,7 @@ class PlanningViewModel(
 
 
     private fun invite(jubilar: Jubilar, standchen: Standchen) {
-        var invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId!!)
+        val invite = StandchenInvite(0, false, standchen.date, jubilar.jubilarId!!)
         standchenRepository.insert(invite)
     }
 
@@ -284,13 +284,13 @@ class PlanningViewModel(
     }
 
     private fun buildCsvContent(standchenList: List<StandchenWithJubilare>): String {
-        val header = "Name,Datum,Antwort\n"
+        val header = "Name,Datum,Adresse,Antwort\n"
         val rows = standchenList.joinToString("") { standchen ->
             if (!standchen.jubilare.isEmpty()) {
                 standchen.jubilare.joinToString("\n") { jubilar ->
                     val name =
                         if (jubilar is BirthdayJubilar) "${jubilar.firstName} ${jubilar.lastName}" else "Ehepaar" + jubilar.lastName
-                    "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},\n"
+                    "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},${jubilar.address},\n"
                 }
             } else {
                 ""
