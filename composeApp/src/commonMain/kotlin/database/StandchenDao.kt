@@ -48,4 +48,8 @@ interface StandchenDao {
 
     @Query("SELECT * FROM Holiday WHERE year = :year LIMIT 1")
     fun getSummerHoliday(year: Int): Flow<Holiday?>
+
+
+    @Query("SELECT * FROM Standchen WHERE date > :date ORDER BY date ASC")
+    fun getStandchenAfterDate(date: LocalDate): Flow<List<Standchen>>
 }

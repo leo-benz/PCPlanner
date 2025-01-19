@@ -199,13 +199,22 @@ class PlanningViewModel(
 
     fun print(jubilare: List<Jubilar>, year: Int, file: File) {
         viewModelScope.launch {
-            val docxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare.docx")
+            val regularDocxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare.docx")
                 ?: error("Resource not found!")
-            val wordMLPackage = WordprocessingMLPackage.load(docxResource)
-            val mainDocumentPart: MainDocumentPart = wordMLPackage.mainDocumentPart
-            VariablePrepare.prepare(wordMLPackage)
-            val template = XmlUtils.deepCopy(mainDocumentPart.contents)
+            val holidaysDocxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare_Ferien.docx")
+                ?: error("Resource not found!")
 
+            val regularWordMLPackage = WordprocessingMLPackage.load(regularDocxResource)
+            val regularMainDocumentPart: MainDocumentPart = regularWordMLPackage.mainDocumentPart
+            VariablePrepare.prepare(regularWordMLPackage)
+            val regularTemplate = XmlUtils.deepCopy(regularMainDocumentPart.contents)
+
+            val holidaysWordMLPackage = WordprocessingMLPackage.load(holidaysDocxResource)
+            val holidaysMainDocumentPart: MainDocumentPart = holidaysWordMLPackage.mainDocumentPart
+            VariablePrepare.prepare(holidaysWordMLPackage)
+            val holidaysTemplate = XmlUtils.deepCopy(holidaysMainDocumentPart.contents)
+
+            regularMainDocumentPart.contents.body.content.clear()
 
             for (jubilar in jubilare) {
                 val standchen = standchenRepository.getStandchen(jubilar, year).first()
@@ -249,15 +258,14 @@ class PlanningViewModel(
                         .format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
                 );
 
-                mainDocumentPart.variableReplace(placeholders)
+                val isHolidayStandchen = standchenRepository.isFirstAfterHoliday(standchen, holiday.value!!)
+                regularMainDocumentPart.contents.body.content.addAll(if (isHolidayStandchen) holidaysTemplate.body.content else regularTemplate.body.content)
 
-                if (jubilar != jubilare.last()) {
-                    mainDocumentPart.contents.body.content.addAll(template.body.content)
-                }
+                regularMainDocumentPart.variableReplace(placeholders)
             }
 
             // Save the new document
-            wordMLPackage.save(file)
+            regularWordMLPackage.save(file)
             println("printed!!!")
         }
     }

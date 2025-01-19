@@ -27,6 +27,7 @@ interface StandchenRepository {
     fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
     fun insert(holiday: Holiday)
     fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>>
+    suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday): Boolean
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -76,6 +77,17 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
 
     override suspend fun remove(standchen: Standchen) {
         database.standchenDao().delete(standchen)
+    }
+
+    override suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday): Boolean {
+        // Fetch all Standchen after the holiday
+        val standchenAfterHoliday = database.standchenDao().getStandchenAfterDate(holiday.endDate).first()
+
+        // Sort by date to ensure chronological order
+        val sorted = standchenAfterHoliday.sortedBy { it.date }
+
+        // Check if the given Standchen is the first in the sorted list
+        return sorted.firstOrNull()?.date == standchen.date
     }
 
     @Throws(SummerHolidayFetchException::class)

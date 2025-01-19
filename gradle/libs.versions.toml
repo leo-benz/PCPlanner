@@ -37,7 +37,7 @@ materialIconsExtended = "1.6.8"
 ktor = "2.3.6"
 coroutines_version = "1.9.0-RC"
 serialization_version = "1.7.1"
-docx4j = "11.5.0"
+docx4j = "11.5.1"
 
 [libraries]
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
