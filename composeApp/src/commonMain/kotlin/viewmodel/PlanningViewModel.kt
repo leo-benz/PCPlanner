@@ -318,7 +318,7 @@ class PlanningViewModel(
                             MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
                             MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
                             else -> "Hochzeit"
-                        } else "${year - jubilar.originalJubilarDate.year}. Geburtstag"
+                        } else "${year.value - jubilar.originalJubilarDate.year}. Geburtstag"
                     "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},${anlass},${jubilar.address},\n"
                 }
             } else {
