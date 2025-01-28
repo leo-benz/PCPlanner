@@ -20,6 +20,7 @@ import repository.JubilareRepository
 import repository.StandchenRepository
 import java.io.File
 import java.time.DayOfWeek
+import kotlin.math.log
 import kotlin.uuid.ExperimentalUuidApi
 
 class PlanningViewModel(
@@ -199,6 +200,8 @@ class PlanningViewModel(
 
     fun print(jubilare: List<Jubilar>, year: Int, file: File) {
         viewModelScope.launch {
+            val logFile = File(file.absolutePath + ".txt")
+            logFile.appendText("Printing letter for ${jubilare.size} jubilare on ${getCurrentLocalDate()}\n")
             val regularDocxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare.docx")
                 ?: error("Resource not found!")
             val holidaysDocxResource = this::class.java.getResourceAsStream("/Anschreiben_Jubilare_Ferien.docx")
@@ -209,14 +212,21 @@ class PlanningViewModel(
             VariablePrepare.prepare(regularWordMLPackage)
             val regularTemplate = XmlUtils.deepCopy(regularMainDocumentPart.contents)
 
+            logFile.appendText("Loaded regular templates\n")
+
             val holidaysWordMLPackage = WordprocessingMLPackage.load(holidaysDocxResource)
             val holidaysMainDocumentPart: MainDocumentPart = holidaysWordMLPackage.mainDocumentPart
             VariablePrepare.prepare(holidaysWordMLPackage)
             val holidaysTemplate = XmlUtils.deepCopy(holidaysMainDocumentPart.contents)
 
+            logFile.appendText("Loaded holiday templates\n")
+
             regularMainDocumentPart.contents.body.content.clear()
 
+            logFile.appendText("Cleared regular template\n")
+
             for (jubilar in jubilare) {
+                logFile.appendText("Printing letter for ${jubilar.lastName}\n")
                 val standchen = standchenRepository.getStandchen(jubilar, year).first()
                 val letterDate = getCurrentLocalDate()
                 val placeholders = mapOf(
@@ -257,15 +267,18 @@ class PlanningViewModel(
                     "standchenFeedbackDate" to standchen.date.minusDays(5)
                         .format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
                 );
-
+                logFile.appendText("Created placeholders\n")
                 val isHolidayStandchen = standchenRepository.isFirstAfterHoliday(standchen, holiday.value!!)
+                logFile.appendText("Is holiday standchen: $isHolidayStandchen\n")
                 regularMainDocumentPart.contents.body.content.addAll(if (isHolidayStandchen) holidaysTemplate.body.content else regularTemplate.body.content)
-
+                logFile.appendText("Added template\n")
                 regularMainDocumentPart.variableReplace(placeholders)
+                logFile.appendText("Replaced placeholders\n")
             }
 
             // Save the new document
             regularWordMLPackage.save(file)
+            logFile.appendText("Saved document with file: ${file.absolutePath}\n")
             println("printed!!!")
         }
     }
@@ -292,13 +305,21 @@ class PlanningViewModel(
     }
 
     private fun buildCsvContent(standchenList: List<StandchenWithJubilare>): String {
-        val header = "Name,Datum,Adresse,Antwort\n"
+        val header = "Name,Datum,Anlass,Adresse,Antwort\n"
         val rows = standchenList.joinToString("") { standchen ->
             if (!standchen.jubilare.isEmpty()) {
                 standchen.jubilare.joinToString("\n") { jubilar ->
                     val name =
                         if (jubilar is BirthdayJubilar) "${jubilar.firstName} ${jubilar.lastName}" else "Ehepaar" + jubilar.lastName
-                    "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},${jubilar.address},\n"
+                    val anlass =
+                        if (jubilar is AnniversaryJubilar) when (jubilar.marriageAnniversary()) {
+                            MarriageAnniversary.DIAMOND -> "Diamantene Hochzeit"
+                            MarriageAnniversary.IRON -> "Eiserne Hochzeit"
+                            MarriageAnniversary.GOLDEN -> "Goldene Hochzeit"
+                            MarriageAnniversary.PLATINUM -> "Gnaden Hochzeit"
+                            else -> "Hochzeit"
+                        } else "${year - jubilar.originalJubilarDate.year}. Geburtstag"
+                    "${name},${standchen.standchen.date.format(LocalDate.Format { dayOfMonth(); chars(". "); monthName(MonthNames.GERMAN_FULL) })},${anlass},${jubilar.address},\n"
                 }
             } else {
                 ""
