@@ -13,6 +13,7 @@ import model.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openapitools.client.apis.HolidaysApi
+import java.io.File
 import kotlin.uuid.ExperimentalUuidApi
 
 interface StandchenRepository {
@@ -27,7 +28,7 @@ interface StandchenRepository {
     fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
     fun insert(holiday: Holiday)
     fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>>
-    suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday): Boolean
+    suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File): Boolean
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -43,6 +44,7 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         return database.standchenDao().getSingleStandchen(date)
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen> {
         return database.standchenDao().getStandchen(jubilar.jubilarId, year)
     }
@@ -79,15 +81,25 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         database.standchenDao().delete(standchen)
     }
 
-    override suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday): Boolean {
-        // Fetch all Standchen after the holiday
-        val standchenAfterHoliday = database.standchenDao().getStandchenAfterDate(holiday.endDate).first()
+    override suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File): Boolean {
+        try {
+            // Fetch all Standchen after the holiday
+            logFile.appendText("Fetching Standchen after holiday ${holiday.startDate} for comparison\n")
+            val standchenFlowAfterHoliday = database.standchenDao().getStandchenAfterDate(holiday.endDate)
+            val standchenAfterHoliday = standchenFlowAfterHoliday.first()
 
-        // Sort by date to ensure chronological order
-        val sorted = standchenAfterHoliday.sortedBy { it.date }
+            // Sort by date to ensure chronological order
+            logFile.appendText("Sorting Standchen after holiday\n")
+            val sorted = standchenAfterHoliday.sortedBy { it.date }
 
-        // Check if the given Standchen is the first in the sorted list
-        return sorted.firstOrNull()?.date == standchen.date
+            logFile.appendText("Checking if Standchen is first after holiday\n")
+            // Check if the given Standchen is the first in the sorted list
+            return sorted.firstOrNull()?.date == standchen.date
+        } catch (e: Exception) {
+            logFile.appendText("Error fetching Standchen after holiday: ${e.message}\n")
+            e.printStackTrace()
+            return false
+        }
     }
 
     @Throws(SummerHolidayFetchException::class)

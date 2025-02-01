@@ -268,7 +268,10 @@ class PlanningViewModel(
                         .format(LocalDate.Format { dayOfMonth(); char('.'); monthNumber(); char('.'); year() })
                 );
                 logFile.appendText("Created placeholders\n")
-                val isHolidayStandchen = standchenRepository.isFirstAfterHoliday(standchen, holiday.value!!)
+                logFile.appendText("Checking if standchen is after holiday ${holiday.value}\n")
+                val isHolidayStandchen = holiday.value?.let {
+                    standchenRepository.isFirstAfterHoliday(standchen, it, logFile)
+                } ?: false
                 logFile.appendText("Is holiday standchen: $isHolidayStandchen\n")
                 regularMainDocumentPart.contents.body.content.addAll(if (isHolidayStandchen) holidaysTemplate.body.content else regularTemplate.body.content)
                 logFile.appendText("Added template\n")
