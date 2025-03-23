@@ -25,10 +25,10 @@ coreKtx = "1.6.1"
 composeTest = "1.6.8"
 
 ksp = "2.1.0-1.0.29"
-androidx-room = "2.7.0-alpha05"
+androidx-room = "2.7.0-rc02"
 openaiClientBom = "3.8.2"
 roomKtx = "2.6.1"
-sqlite = "2.5.0-alpha12"
+sqlite = "2.5.0-rc02"
 
 datetime = "0.6.0"
 material3Desktop = "1.6.11"

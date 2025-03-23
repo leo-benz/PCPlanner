@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import database.AppDatabase
 import database.dbFileName
+import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
 import java.io.File
 
@@ -37,6 +38,7 @@ fun createRoomDatabase(): AppDatabase {
 
     val dbBuilder =  Room.databaseBuilder<AppDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
+        .setQueryCoroutineContext(Dispatchers.IO)
 
 //    dbBuilder.fallbackToDestructiveMigration(true)
 

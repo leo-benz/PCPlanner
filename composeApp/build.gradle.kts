@@ -15,7 +15,7 @@ plugins {
     id("dev.hydraulic.conveyor") version "1.12"
 }
 
-version = "0.4.2"
+version = "0.4.3"
 
 kotlin {
     androidTarget {
@@ -43,9 +43,9 @@ kotlin {
 //    }
     
     sourceSets {
-        sourceSets.commonMain {
-            kotlin.srcDir("build/generated/ksp/metadata")
-        }
+//        sourceSets.commonMain {
+//            kotlin.srcDir("build/generated/ksp/metadata")
+//        }
 
         val jvmMain by getting
         
@@ -171,18 +171,20 @@ compose.desktop {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", libs.androidx.room.compiler)
+//    add("kspCommonMainMetadata", libs.androidx.room.compiler)
     add("kspAndroid", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
+
 //    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 //    add("kspIosX64", libs.androidx.room.compiler)
 //    add("kspIosArm64", libs.androidx.room.compiler)
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().all {
-    if(name != "kspCommonMainKotlinMetadata") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
+//tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().all {
+//    if(name != "kspCommonMainKotlinMetadata") {
+//        dependsOn("kspCommonMainKotlinMetadata")
+//    }
+//}
 
 room {
     schemaDirectory("$projectDir/schemas")

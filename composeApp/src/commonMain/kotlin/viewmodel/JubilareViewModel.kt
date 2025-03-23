@@ -19,6 +19,12 @@ class JubilareViewModel(
         return repository.getJubilare()
     }
 
+    fun generateTestSet() {
+        for (i in 1..100) {
+            insertRandomJubilar()
+        }
+    }
+
     fun insertRandomJubilar() {
         val jubilar = generateRandomJubilar()
         repository.insert(jubilar)
@@ -36,7 +42,7 @@ class JubilareViewModel(
 
         val firstName = firstNames.random()
         val lastName = lastNames.random()
-        val birthdate = LocalDate(1970 + Random.nextInt(50), Random.nextInt(1, 12), Random.nextInt(1, 28))
+        val birthdate = LocalDate(1935, Random.nextInt(1, 12), Random.nextInt(1, 28))
         val gender = genders.random()
         val address = "Random Address ${Random.nextInt(1000)}"
         val optOut = Random.nextBoolean()
