@@ -1,6 +1,8 @@
 package ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,6 +47,9 @@ fun DateDetails(modifier: Modifier = Modifier) {
         val isStandchen by viewModel.isStandchen(date).collectAsState(initial = false)
 
         Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             shape = MaterialTheme.shapes.medium,
             tonalElevation = 8.dp
         ) {
@@ -73,13 +78,18 @@ fun DateDetails(modifier: Modifier = Modifier) {
                 val jubilare by viewModel.jubilare(date).collectAsState(initial = emptyList())
                 if (jubilare.isNotEmpty()) {
                     Text("${jubilare.size} Jubilar${if (jubilare.size == 1) "" else "e"}:", style = MaterialTheme.typography.bodyMedium)
-                    jubilare.forEach {
-                        when (it) {
-                            is BirthdayJubilar -> {
-                                Text("${it.firstName} ${it.lastName}", style = MaterialTheme.typography.bodySmall)
-                            }
-                            is AnniversaryJubilar -> {
-                                Text("Ehepaar ${it.lastName}", style = MaterialTheme.typography.bodySmall)
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(jubilare) { jubilar ->
+                            when (jubilar) {
+                                is BirthdayJubilar -> {
+                                    Text("${jubilar.firstName} ${jubilar.lastName}", style = MaterialTheme.typography.bodySmall)
+                                }
+                                is AnniversaryJubilar -> {
+                                    Text("Ehepaar ${jubilar.lastName}", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
