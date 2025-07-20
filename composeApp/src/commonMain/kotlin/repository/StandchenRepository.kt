@@ -28,7 +28,7 @@ interface StandchenRepository {
     fun getStandchen(jubilar: Jubilar, year: Int): Flow<Standchen>
     fun insert(holiday: Holiday)
     fun getStandchenWithJubilare(year: Int): Flow<List<StandchenWithJubilare>>
-    suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File): Boolean
+    suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File? = null): Boolean
 }
 
 class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
@@ -81,22 +81,22 @@ class StandchenRepositoryImpl : StandchenRepository, KoinComponent {
         database.standchenDao().delete(standchen)
     }
 
-    override suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File): Boolean {
+    override suspend fun isFirstAfterHoliday(standchen: Standchen, holiday: Holiday, logFile: File?): Boolean {
         try {
             // Fetch all Standchen after the holiday
-            logFile.appendText("Fetching Standchen after holiday ${holiday.startDate} for comparison\n")
+            logFile?.appendText("Fetching Standchen after holiday ${holiday.startDate} for comparison\n")
             val standchenFlowAfterHoliday = database.standchenDao().getStandchenAfterDate(holiday.endDate)
             val standchenAfterHoliday = standchenFlowAfterHoliday.first()
 
             // Sort by date to ensure chronological order
-            logFile.appendText("Sorting Standchen after holiday\n")
+            logFile?.appendText("Sorting Standchen after holiday\n")
             val sorted = standchenAfterHoliday.sortedBy { it.date }
 
-            logFile.appendText("Checking if Standchen is first after holiday\n")
+            logFile?.appendText("Checking if Standchen is first after holiday\n")
             // Check if the given Standchen is the first in the sorted list
             return sorted.firstOrNull()?.date == standchen.date
         } catch (e: Exception) {
-            logFile.appendText("Error fetching Standchen after holiday: ${e.message}\n")
+            logFile?.appendText("Error fetching Standchen after holiday: ${e.message}\n")
             e.printStackTrace()
             return false
         }

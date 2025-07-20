@@ -114,19 +114,28 @@ fun DayCell(day: LocalDate, modifier: Modifier) {
     val isHoliday by viewModel.isHoliday(day).collectAsState(initial = false)
     val isStandchen by viewModel.isStandchen(day).collectAsState(initial = false)
     val isJubilarDay by viewModel.isJubilarDay(day).collectAsState(initial = false)
+    val isFirstAfterHoliday by viewModel.isFirstStandchenAfterHoliday(day).collectAsState(initial = false)
 
     var bgColor = when (dayOfWeek) {
-        DayOfWeek.SUNDAY -> if (isStandchen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
+        DayOfWeek.SUNDAY -> when {
+            isStandchen && isFirstAfterHoliday -> Color(0xFF4CAF50) // Green color
+            isStandchen -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.primaryContainer
+        }
         else -> MaterialTheme.colorScheme.background
     }
 
     var fgColor = when (dayOfWeek) {
-        DayOfWeek.SUNDAY -> if (isStandchen) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
+        DayOfWeek.SUNDAY -> when {
+            isStandchen && isFirstAfterHoliday -> Color.White
+            isStandchen -> MaterialTheme.colorScheme.onPrimary
+            else -> MaterialTheme.colorScheme.onPrimaryContainer
+        }
         else -> MaterialTheme.colorScheme.onBackground
     }
 
     if (isHoliday) {
-        bgColor = bgColor.darken(0.9f)
+        bgColor = bgColor.darken(0.9f).addGreenTint(0.1f)
     }
 
     if (isJubilarDay) {
@@ -146,4 +155,13 @@ private fun Color.lighen(fl: Float): Color {
 
 private fun Color.darken(fl: Float): Color {
     return Color(red = red * fl, green = green * fl, blue = blue * fl, alpha = alpha)
+}
+
+private fun Color.addGreenTint(intensity: Float): Color {
+    return Color(
+        red = red * (1 - intensity) + 0.2f * intensity,
+        green = green * (1 - intensity) + 0.8f * intensity,
+        blue = blue * (1 - intensity) + 0.2f * intensity,
+        alpha = alpha
+    )
 }

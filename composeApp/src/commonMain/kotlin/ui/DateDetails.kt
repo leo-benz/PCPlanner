@@ -45,6 +45,7 @@ fun DateDetails(modifier: Modifier = Modifier) {
         val date = viewModel.dateDetails.value!!
 
         val isStandchen by viewModel.isStandchen(date).collectAsState(initial = false)
+        val isFirstAfterHoliday by viewModel.isFirstStandchenAfterHoliday(date).collectAsState(initial = false)
 
         Surface(
             modifier = Modifier
@@ -66,8 +67,17 @@ fun DateDetails(modifier: Modifier = Modifier) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ){
-                        val text = if (isStandchen) "Ständchensonntag" else "Sonntag"
-                        Text(text = text, style = MaterialTheme.typography.bodyMedium)
+                        Column {
+                            val text = if (isStandchen) "Ständchensonntag" else "Sonntag"
+                            Text(text = text, style = MaterialTheme.typography.bodyMedium)
+                            if (isStandchen && isFirstAfterHoliday) {
+                                Text(
+                                    text = "Erstes Ständchen nach den Ferien",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
 
                         TextButton(onClick = { viewModel.toggleStandchen(date) }) {
                             Text(if (isStandchen) "Ständchen Absagen" else "Ständchen Spielen")

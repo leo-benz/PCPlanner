@@ -161,6 +161,23 @@ class PlanningViewModel(
         }
     }
 
+    fun isFirstStandchenAfterHoliday(day: LocalDate): Flow<Boolean> {
+        return combine(
+            standchenRepository.getStandchen(day),
+            holiday
+        ) { standchen, summerHoliday ->
+            if (standchen != null && summerHoliday != null) {
+                try {
+                    standchenRepository.isFirstAfterHoliday(standchen, summerHoliday)
+                } catch (e: Exception) {
+                    false
+                }
+            } else {
+                false
+            }
+        }
+    }
+
     fun onDaySelected(day: LocalDate) {
         viewModelScope.launch {
             println("Day selected: $day")
